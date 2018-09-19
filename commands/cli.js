@@ -4,320 +4,330 @@ let ccUtil = require("wanchain-js-sdk").ccUtil;
 let WalletCore = require("wanchain-js-sdk").walletCore;
 let wanUtil = require("wanchain-util");
 let ethUtil = require('ethereumjs-util');
-let config = require('../config');
+let config = require('../conf/config');
 const Web3 = require("web3");
 let web3 = new Web3(null);
 let {DMS, ERROR_MESSAGE} = require('../schema/DMS');
 let walletCore = new WalletCore(config);
-walletCore.init();
-const ACTION = {
-  APPROVE: 'APPROVE',
-  LOCK: 'LOCK',
-  REFUND: 'REFUND',
-  REVOKE: 'REVOKE'
-};
-vorpal
-  .command('lock', 'lock')
-  .cancel(function () {
-    process.exit(0);
-  })
-  .action(function (args, callback) {
-    let self = this;
-    return new Promise(async function (resolve, reject) {
-      args.action = ACTION.LOCK;//['approve','lock','refund','revoke']
-      let ERROR = false;
-      let srcChain = await new Promise(function (resolve, reject) {
-        loadSrcChain(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
+
+async function main() {
+  await walletCore.init();
+  const ACTION = {
+    APPROVE: 'APPROVE',
+    LOCK: 'LOCK',
+    REFUND: 'REFUND',
+    REVOKE: 'REVOKE'
+  };
+  vorpal
+    .command('lock', 'lock')
+    .cancel(function () {
+      process.exit(0);
+    })
+    .action(function (args, callback) {
+      let self = this;
+      console.log('1')
+
+      return new Promise(async function (resolve, reject) {
+        args.action = ACTION.LOCK;//['approve','lock','refund','revoke']
+        let ERROR = false;
+        let srcChain = await new Promise(function (resolve, reject) {
+          loadSrcChain(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        args.srcChain = srcChain;
+        console.log("==============================");
+        console.log("srcChain:", srcChain);
+        let dstChain = await new Promise(function (resolve, reject) {
+          loadDstChain(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        args.dstChain = dstChain;
+        console.log("==============================");
+        console.log("dstChain:", dstChain);
+        let from = await new Promise(function (resolve, reject) {
+          loadFromAccount(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("from:", from);
+        console.log("srcChain.storemanGroups===========");
+        console.log(srcChain[1].storemenGroup);
+        console.log("dstChain.storemanGroups===========");
+        console.log(dstChain[1].storemenGroup);
+        let storeman = await new Promise(function (resolve, reject) {
+          loadStoremanGroups(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("storeman:", storeman);
+        let to = await new Promise(function (resolve, reject) {
+          loadToAccount(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== amount   ==================
+        let amount = await new Promise(function (resolve, reject) {
+          loadAmount(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("amount:", amount);
+        //================== gasPrice ==================
+        let gasPrice = await new Promise(function (resolve, reject) {
+          loadGasPrice(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("gasPrice:", gasPrice);
+        //================== gasLimit ==================
+        let gasLimit = await new Promise(function (resolve, reject) {
+          loadGasLimit(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("gasLimit:", gasLimit);
+        //================== password ==================
+        let password = await new Promise(function (resolve, reject) {
+          loadPassword(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("password:", password);
+        vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+        const input = {};
+        input.from = from;
+        input.storeman = storeman.storemenGroupAddr;
+        input.txFeeRatio = storeman.txFeeRatio;
+        input.to = to;
+        input.amount = amount;
+        input.gasPrice = gasPrice;
+        input.gasLimit = gasLimit;
+        input.password = password;
+        // input.srcChain = args.srcChain[1].tokenSymbol;
+        // input.dstChain = args.dstChain[1].tokenSymbol;
+        await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
+        callback();
       });
-      if (ERROR) {
-        return;
-      }
-      args.srcChain = srcChain;
-      console.log("==============================");
-      console.log("srcChain:", srcChain);
-      let dstChain = await new Promise(function (resolve, reject) {
-        loadDstChain(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      args.dstChain = dstChain;
-      console.log("==============================");
-      console.log("dstChain:", dstChain);
-      let from = await new Promise(function (resolve, reject) {
-        loadFromAccount(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("from:", from);
-      console.log("srcChain.storemanGroups===========");
-      console.log(srcChain[1].storemenGroup);
-      console.log("dstChain.storemanGroups===========");
-      console.log(dstChain[1].storemenGroup);
-      let storeman = await new Promise(function (resolve, reject) {
-        loadStoremanGroups(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("storeman:", storeman);
-      let to = await new Promise(function (resolve, reject) {
-        loadToAccount(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      //================== amount   ==================
-      let amount = await new Promise(function (resolve, reject) {
-        loadAmount(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("amount:", amount);
-      //================== gasPrice ==================
-      let gasPrice = await new Promise(function (resolve, reject) {
-        loadGasPrice(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("gasPrice:", gasPrice);
-      //================== gasLimit ==================
-      let gasLimit = await new Promise(function (resolve, reject) {
-        loadGasLimit(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("gasLimit:", gasLimit);
-      //================== password ==================
-      let password = await new Promise(function (resolve, reject) {
-        loadPassword(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("password:", password);
-      vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-      const input = {};
-      input.from = from;
-      input.storeman = storeman.storemenGroupAddr;
-      input.txFeeRatio = storeman.txFeeRatio;
-      input.to = to;
-      input.amount = amount;
-      input.gasPrice = gasPrice;
-      input.gasLimit = gasLimit;
-      input.password = password;
-      // input.srcChain = args.srcChain[1].tokenSymbol;
-      // input.dstChain = args.dstChain[1].tokenSymbol;
-      await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
-      callback();
     });
-  });
-vorpal
-  .command('refund', 'refund')
-  .cancel(function () {
-    process.exit(0);
-  })
-  .action(function (args, callback) {
-    let self = this;
-    return new Promise(async function (resolve, reject) {
-      args.action = ACTION.REFUND;//['approve','lock','refund','revoke']
-      let ERROR = false;
-      // input: { from: '0x0d8935721ced2be0d52a99f8dd8894f1ab9b517b',
-      //   storeman: '0x41623962c5d44565de623d53eb677e0f300467d2',
-      //   to: '0x860fb460b01d626e70dd9d95c604c0a1a9f06490',
-      //   amount: '0.0012',
-      //   gasPrice: '100',
-      //   gasLimit: '2000000',
-      //   password: '123456',
-      //   chainType: 'ETH' }
-      //================== txHashList   ==================
-      let tx = await new Promise(function (resolve, reject) {
-        loadTxHashList(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
+  vorpal
+    .command('refund', 'refund')
+    .cancel(function () {
+      process.exit(0);
+    })
+    .action(function (args, callback) {
+      let self = this;
+      return new Promise(async function (resolve, reject) {
+        args.action = ACTION.REFUND;//['approve','lock','refund','revoke']
+        let ERROR = false;
+        // input: { from: '0x0d8935721ced2be0d52a99f8dd8894f1ab9b517b',
+        //   storeman: '0x41623962c5d44565de623d53eb677e0f300467d2',
+        //   to: '0x860fb460b01d626e70dd9d95c604c0a1a9f06490',
+        //   amount: '0.0012',
+        //   gasPrice: '100',
+        //   gasLimit: '2000000',
+        //   password: '123456',
+        //   chainType: 'ETH' }
+        //================== txHashList   ==================
+        let tx = await new Promise(function (resolve, reject) {
+          loadTxHashList(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("tx:", tx);
+        //================== gasPrice ==================
+        let gasPrice = await new Promise(function (resolve, reject) {
+          loadGasPrice(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("gasPrice:", gasPrice);
+        //================== gasLimit ==================
+        let gasLimit = await new Promise(function (resolve, reject) {
+          loadGasLimit(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("gasLimit:", gasLimit);
+        //================== password ==================
+        let password = await new Promise(function (resolve, reject) {
+          loadPassword(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("password:", password);
+        //
+        vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+        // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
+        let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr);
+        let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr);
+        const input = {};
+        // input.from = lockTrans.to;
+        input.x = tx.x;
+        input.hashX = tx.hashX;
+        input.gasPrice = gasPrice;
+        input.gasLimit = gasLimit;
+        input.password = password;
+        console.log("srcChain:",srcChain);
+        console.log("dstChain:",dstChain);
+        await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+        callback();
       });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("tx:", tx);
-      //================== gasPrice ==================
-      let gasPrice = await new Promise(function (resolve, reject) {
-        loadGasPrice(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("gasPrice:", gasPrice);
-      //================== gasLimit ==================
-      let gasLimit = await new Promise(function (resolve, reject) {
-        loadGasLimit(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("gasLimit:", gasLimit);
-      //================== password ==================
-      let password = await new Promise(function (resolve, reject) {
-        loadPassword(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("password:", password);
-      //
-      vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-      // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
-      let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr);
-      let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr);
-      const input = {};
-      // input.from = lockTrans.to;
-      input.x = tx.x;
-      input.hashX = tx.hashX;
-      input.gasPrice = gasPrice;
-      input.gasLimit = gasLimit;
-      input.password = password;
-      console.log("srcChain:",srcChain);
-      console.log("dstChain:",dstChain);
-      await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
-      callback();
     });
+  vorpal
+    .command('revoke', 'revoke')
+    .cancel(function () {
+      process.exit(0);
+    })
+    .action(function (args, callback) {
+      let self = this;
+      return new Promise(async function (resolve, reject) {
+        args.action = ACTION.REVOKE;//['approve','lock','refund','revoke']
+        let ERROR = false;
+        //================== txHashList   ==================
+        let tx = await new Promise(function (resolve, reject) {
+          loadTxHashList(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("tx:", tx);
+        //================== gasPrice ==================
+        let gasPrice = await new Promise(function (resolve, reject) {
+          loadGasPrice(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("gasPrice:", gasPrice);
+        //================== gasLimit ==================
+        let gasLimit = await new Promise(function (resolve, reject) {
+          loadGasLimit(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("gasLimit:", gasLimit);
+        //================== password ==================
+        let password = await new Promise(function (resolve, reject) {
+          loadPassword(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        console.log("==============================");
+        console.log("password:", password);
+        //
+        vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+        // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
+        let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr);
+        let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr);
+        const input = {};
+        input.x = tx.x;
+        input.hashX = tx.hashX;
+        input.gasPrice = gasPrice;
+        input.gasLimit = gasLimit;
+        input.password = password;
+        console.log("srcChain:",srcChain);
+        console.log("dstChain:",dstChain);
+        await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+        callback();
+      });
   });
-vorpal
-  .command('revoke', 'revoke')
-  .cancel(function () {
-    process.exit(0);
-  })
-  .action(function (args, callback) {
-    let self = this;
-    return new Promise(async function (resolve, reject) {
-      args.action = ACTION.REVOKE;//['approve','lock','refund','revoke']
-      let ERROR = false;
-      //================== txHashList   ==================
-      let tx = await new Promise(function (resolve, reject) {
-        loadTxHashList(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("tx:", tx);
-      //================== gasPrice ==================
-      let gasPrice = await new Promise(function (resolve, reject) {
-        loadGasPrice(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("gasPrice:", gasPrice);
-      //================== gasLimit ==================
-      let gasLimit = await new Promise(function (resolve, reject) {
-        loadGasLimit(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("gasLimit:", gasLimit);
-      //================== password ==================
-      let password = await new Promise(function (resolve, reject) {
-        loadPassword(self, args, resolve, reject);
-      }).catch(function (err) {
-        ERROR = true;
-        callback(err);
-      });
-      if (ERROR) {
-        return;
-      }
-      console.log("==============================");
-      console.log("password:", password);
-      //
-      vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-      // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
-      let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr);
-      let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr);
-      const input = {};
-      input.x = tx.x;
-      input.hashX = tx.hashX;
-      input.gasPrice = gasPrice;
-      input.gasLimit = gasLimit;
-      input.password = password;
-      console.log("srcChain:",srcChain);
-      console.log("dstChain:",dstChain);
-      await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
-      callback();
-    });
-  });
-vorpal.delimiter("wallet1$ ").show();
+  vorpal.delimiter("wallet-cli$ ").show();
+}
+
+main();
+
 async function loadSrcChain(v, args, resolve, reject) {
   let self = v;
   let ERROR = false;
   let MsgPrompt = '';
   let srcChainArray = [];
   try {
+    console.log('2')
     let srcChainMap = global.crossInvoker.getSrcChainName();
     MsgPrompt += sprintf("%10s %56s\r\n", "src chain", "chain address");
     let index = 0;
+
     for (let chain of srcChainMap) {
       index++;
       let keyTemp = chain[0];
