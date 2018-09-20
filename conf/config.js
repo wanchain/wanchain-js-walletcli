@@ -1,8 +1,8 @@
 const config        = {};
 config.port         = 8545;
 config.useLocalNode = false;
-config.loglevel     = 'info';
-//config.loglevel   = 'debug';
+//config.loglevel     = 'info';
+config.loglevel   = 'debug';
 
 let network;
 network             = 'test';

@@ -19,6 +19,11 @@ exports.DMS = {
     name: 'dstChain',
     message: _colorStart + 'Input the index of dstChain: ' + _colorEnd
   },
+  'chainToken': {
+    type: 'input',
+    name: 'chainToken',
+    message: _colorStart + 'Input the index of token: ' + _colorEnd
+  },
   'StoremanGroup': {
     type: 'input',
     name: 'storeman',

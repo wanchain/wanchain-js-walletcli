@@ -15,7 +15,7 @@
     "ws": "^6.0.0",
     "vorpal": "^1.12.0",
     "sprintf-js": "^1.1.1",
-    "wanchain-js-sdk": "file:../wanchain-js-sdk"
+    "wanchain-js-sdk": "file:~/wanchain/wanchain-js-sdk"
   },
   "keywords": [
     "wanchain"
