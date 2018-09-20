@@ -40,6 +40,7 @@ async function main(){
 
         self.tokenList = chainDicItem[1];
         let srcChain;
+        let dstChain;
         if(chainDicItem[0] !== 'WAN'){
           console.log("==============================");
           srcChain = await new Promise(function (resolve, reject) {
@@ -54,8 +55,8 @@ async function main(){
           // console.log("srcChain:", srcChain);
 
           // set dstChain to wan
-          console.log("config.wanTokenAddress", config.wanTokenAddress);
-          args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress);
+          //console.log("config.wanTokenAddress", config.wanTokenAddress);
+          args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
 
           // console.log("==============================");
           // console.log("dstChain:", args.dstChain);
@@ -63,7 +64,7 @@ async function main(){
         }else{
           // set srcChain to wan
           console.log("config.wanTokenAddress", config.wanTokenAddress);
-          args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress);
+          args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
           // console.log("==============================");
           // console.log("srcChain:", args.srcChain);
           // console.log("==============================");
@@ -101,12 +102,13 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
-        console.log("from:", from);
-        console.log("srcChain.storemanGroups===========");
-        console.log(srcChain[1].storemenGroup);
-        console.log("dstChain.storemanGroups===========");
-        console.log(dstChain[1].storemenGroup);
+        // console.log("==============================");
+        // console.log("from:", from);
+        // console.log("srcChain.storemanGroups===========");
+        // console.log(srcChain[1].storemenGroup);
+        // console.log("dstChain.storemanGroups===========");
+        // dstChain = args.dstChain;
+        // console.log(dstChain[1].storemenGroup);
         let storeman = await new Promise(function (resolve, reject) {
           loadStoremanGroups(self, args, resolve, reject);
         }).catch(function (err) {
@@ -187,7 +189,7 @@ async function main(){
         input.password = password;
         // input.srcChain = args.srcChain[1].tokenSymbol;
         // input.dstChain = args.dstChain[1].tokenSymbol;
-        await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
+        let ret = await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
         callback();
       });
 
@@ -261,8 +263,8 @@ async function main(){
         //
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
         // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
-        let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr);
-        let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr);
+        let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
+        let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr,tx.dstChainType);
         const input = {};
         // input.from = lockTrans.to;
         input.x = tx.x;
@@ -337,8 +339,8 @@ async function main(){
         //
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
         // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
-        let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr);
-        let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr);
+        let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
+        let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr,tx.dstChainType);
         const input = {};
         input.x = tx.x;
         input.hashX = tx.hashX;
@@ -352,108 +354,108 @@ async function main(){
       });
     });
 
-  vorpal
-    .command('transfer', 'transfer')
-    .cancel(function () {
-      process.exit(0);
-    })
-    .action(function (args, callback) {
-      let self = this;
-      return new Promise(async function (resolve, reject) {
-        let ERROR = false;
-        let srcChain = await new Promise(function (resolve, reject) {
-          loadSrcChain(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        args.srcChain = srcChain;
-        console.log("==============================");
-        console.log("srcChain:", srcChain);
-        console.log("==============================");
-        let from = await new Promise(function (resolve, reject) {
-          loadFromAccount(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        console.log("==============================");
-        console.log("from:", from);
-        let to = await new Promise(function (resolve, reject) {
-          loadToAccountNormal(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        //================== amount   ==================
-        let amount = await new Promise(function (resolve, reject) {
-          loadAmount(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        console.log("==============================");
-        console.log("amount:", amount);
-        //================== gasPrice ==================
-        let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        console.log("==============================");
-        console.log("gasPrice:", gasPrice);
-        //================== gasLimit ==================
-        let gasLimit = await new Promise(function (resolve, reject) {
-          loadGasLimit(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        console.log("==============================");
-        console.log("gasLimit:", gasLimit);
-        //================== password ==================
-        let password = await new Promise(function (resolve, reject) {
-          loadPassword(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        console.log("==============================");
-        console.log("password:", password);
-        vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-        const input = {};
-        input.from = from;
-        input.to = to;
-        input.amount = amount;
-        input.gasPrice = gasPrice;
-        input.gasLimit = gasLimit;
-        input.password = password;
-        await global.crossInvoker.invokeNormalTrans(args.srcChain,input);
-        callback();
-      });
-    });
+  // vorpal
+  //   .command('transfer', 'transfer')
+  //   .cancel(function () {
+  //     process.exit(0);
+  //   })
+  //   .action(function (args, callback) {
+  //     let self = this;
+  //     return new Promise(async function (resolve, reject) {
+  //       let ERROR = false;
+  //       let srcChain = await new Promise(function (resolve, reject) {
+  //         loadSrcChain(self, args, resolve, reject);
+  //       }).catch(function (err) {
+  //         ERROR = true;
+  //         callback(err);
+  //       });
+  //       if (ERROR) {
+  //         return;
+  //       }
+  //       args.srcChain = srcChain;
+  //       console.log("==============================");
+  //       console.log("srcChain:", srcChain);
+  //       console.log("==============================");
+  //       let from = await new Promise(function (resolve, reject) {
+  //         loadFromAccount(self, args, resolve, reject);
+  //       }).catch(function (err) {
+  //         ERROR = true;
+  //         callback(err);
+  //       });
+  //       if (ERROR) {
+  //         return;
+  //       }
+  //       console.log("==============================");
+  //       console.log("from:", from);
+  //       let to = await new Promise(function (resolve, reject) {
+  //         loadToAccountNormal(self, args, resolve, reject);
+  //       }).catch(function (err) {
+  //         ERROR = true;
+  //         callback(err);
+  //       });
+  //       if (ERROR) {
+  //         return;
+  //       }
+  //       //================== amount   ==================
+  //       let amount = await new Promise(function (resolve, reject) {
+  //         loadAmount(self, args, resolve, reject);
+  //       }).catch(function (err) {
+  //         ERROR = true;
+  //         callback(err);
+  //       });
+  //       if (ERROR) {
+  //         return;
+  //       }
+  //       console.log("==============================");
+  //       console.log("amount:", amount);
+  //       //================== gasPrice ==================
+  //       let gasPrice = await new Promise(function (resolve, reject) {
+  //         loadGasPrice(self, args, resolve, reject);
+  //       }).catch(function (err) {
+  //         ERROR = true;
+  //         callback(err);
+  //       });
+  //       if (ERROR) {
+  //         return;
+  //       }
+  //       console.log("==============================");
+  //       console.log("gasPrice:", gasPrice);
+  //       //================== gasLimit ==================
+  //       let gasLimit = await new Promise(function (resolve, reject) {
+  //         loadGasLimit(self, args, resolve, reject);
+  //       }).catch(function (err) {
+  //         ERROR = true;
+  //         callback(err);
+  //       });
+  //       if (ERROR) {
+  //         return;
+  //       }
+  //       console.log("==============================");
+  //       console.log("gasLimit:", gasLimit);
+  //       //================== password ==================
+  //       let password = await new Promise(function (resolve, reject) {
+  //         loadPassword(self, args, resolve, reject);
+  //       }).catch(function (err) {
+  //         ERROR = true;
+  //         callback(err);
+  //       });
+  //       if (ERROR) {
+  //         return;
+  //       }
+  //       console.log("==============================");
+  //       console.log("password:", password);
+  //       vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+  //       const input = {};
+  //       input.from = from;
+  //       input.to = to;
+  //       input.amount = amount;
+  //       input.gasPrice = gasPrice;
+  //       input.gasLimit = gasLimit;
+  //       input.password = password;
+  //       await global.crossInvoker.invokeNormalTrans(args.srcChain,input);
+  //       callback();
+  //     });
+  //   });
   vorpal.delimiter("wallet1$ ").show();
   async function loadSrcChainDic(v, args, resolve, reject) {
     let self = v;
@@ -461,8 +463,8 @@ async function main(){
     let MsgPrompt = '';
     let srcChainArray = [];
     try {
-      let srcChainMap = global.crossInvoker.getSrcChainDic();
-      MsgPrompt += sprintf("%10s %56s\r\n", "src chain","src chain Name");
+      let srcChainMap = global.crossInvoker.getSrcChainName();
+      MsgPrompt += sprintf("%10s\r\n", "Source Chain");
       let index = 0;
       for (let chainDicItem of srcChainMap) {
         index++;
@@ -471,7 +473,7 @@ async function main(){
         srcChainArray[index] = chainDicItem;
         srcChainArray[keyTemp] = chainDicItem;
         let indexString = (index) + ': ' + keyTemp;
-        MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
+        MsgPrompt += sprintf("%10s\r\n", indexString);
       }
     } catch (e) {
       ERROR = true;
@@ -512,8 +514,8 @@ async function main(){
     let MsgPrompt = '';
     let srcChainArray = [];
     try {
-      let srcChainMap = global.crossInvoker.getDstChainDicBySrc(args.srcChain);
-      MsgPrompt += sprintf("%10s %56s\r\n", "dst chain","dst chain Name");
+      let srcChainMap = global.crossInvoker.getDstChainName(args.srcChain);
+      MsgPrompt += sprintf("%10s\r\n", "Destination chain");
       let index = 0;
       for (let chain of srcChainMap) {
         index++;
@@ -522,7 +524,7 @@ async function main(){
         srcChainArray[index] = valueTemp;
         srcChainArray[keyTemp] = valueTemp;
         let indexString = (index) + ': ' + keyTemp;
-        MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
+        MsgPrompt += sprintf("%10s\r\n", indexString);
       }
     } catch (e) {
       ERROR = true;
@@ -613,114 +615,114 @@ async function main(){
       }
     });
   }
-  async function loadSrcChain(v, args, resolve, reject) {
-    let self = v;
-    let ERROR = false;
-    let MsgPrompt = '';
-    let srcChainArray = [];
-    try {
-      let srcChainMap = global.crossInvoker.getSrcChainName();
-      MsgPrompt += sprintf("%10s %56s\r\n", "src chain", "chain address");
-      let index = 0;
-      for (let chain of srcChainMap) {
-        index++;
-        let keyTemp = chain[0];
-        let valueTemp = chain[1];
-        srcChainArray[index] = chain;
-        srcChainArray[keyTemp] = chain;
-        let indexString = (index) + ': ' + valueTemp.tokenSymbol;
-        MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
-      }
-    } catch (e) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.SRC_ERROR + e.message);
-    }
-    if (ERROR) {
-      return;
-    }
-    let schema =
-      {
-        type: DMS.srcChain.type,
-        name: DMS.srcChain.name,
-        message: MsgPrompt + DMS.srcChain.message
-      };
-    self.prompt([schema], function (result) {
-      let srcChainIndex = result[DMS.srcChain.name];
-      checkExit(srcChainIndex);
-      // validate
-      let validate = false;
-      let srcChain;
-      if (srcChainIndex) {
-        srcChain = srcChainArray[srcChainIndex];
-      }
-      if (srcChain) {
-        validate = true;
-      }
-      if (!validate) {
-        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
-        loadSrcChain(self, args, resolve, reject);
-      } else {
-        resolve(srcChain);
-      }
-    });
-  }
-  async function loadDstChain(v, args, resolve, reject) {
-    let self = v;
-    let ERROR = false;
-    let MsgPrompt = '';
-    let dstChainArray = [];
-    try {
-      let dstChainMap = global.crossInvoker.getDstChainName(args.srcChain);
-      MsgPrompt += sprintf("%10s %56s\r\n", "dst chain", "chain address");
-      // console.log("dstChainMap:", dstChainMap);
-      let index = 0;
-      for (let chain of dstChainMap) {
-        index++;
-        let keyTemp = chain[0];
-        let valueTemp = chain[1];
-        // if (valueTemp.tokenStand === 'E20'){
-        //   let tokenSymbol = await ccUtil.getErc20SymbolInfo(keyTemp);
-        //   // console.log("initChainsSymbol ",tokenSymbol);
-        //   valueTemp.tokenSymbol = tokenSymbol;
-        // }
-        dstChainArray[index] = chain;
-        dstChainArray[keyTemp] = chain;
-        let indexString = (index) + ': ' + valueTemp.tokenSymbol;
-        MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
-      }
-    } catch (e) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.DST_ERROR + e.message);
-    }
-    if (ERROR) {
-      return;
-    }
-    let schema =
-      {
-        type: DMS.dstChain.type,
-        name: DMS.dstChain.name,
-        message: MsgPrompt + DMS.dstChain.message
-      };
-    self.prompt([schema], function (result) {
-      let dstChainIndex = result[DMS.dstChain.name];
-      checkExit(dstChainIndex);
-      // validate
-      let validate = false;
-      let dstChain;
-      if (dstChainIndex) {
-        dstChain = dstChainArray[dstChainIndex];
-      }
-      if (dstChain) {
-        validate = true;
-      }
-      if (!validate) {
-        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
-        loadDstChain(self, args, resolve, reject);
-      } else {
-        resolve(dstChain);
-      }
-    });
-  }
+  // async function loadSrcChain(v, args, resolve, reject) {
+  //   let self = v;
+  //   let ERROR = false;
+  //   let MsgPrompt = '';
+  //   let srcChainArray = [];
+  //   try {
+  //     let srcChainMap = global.crossInvoker.getSrcChainName();
+  //     MsgPrompt += sprintf("%10s %56s\r\n", "src chain", "chain address");
+  //     let index = 0;
+  //     for (let chain of srcChainMap) {
+  //       index++;
+  //       let keyTemp = chain[0];
+  //       let valueTemp = chain[1];
+  //       srcChainArray[index] = chain;
+  //       srcChainArray[keyTemp] = chain;
+  //       let indexString = (index) + ': ' + valueTemp.tokenSymbol;
+  //       MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
+  //     }
+  //   } catch (e) {
+  //     ERROR = true;
+  //     reject(ERROR_MESSAGE.SRC_ERROR + e.message);
+  //   }
+  //   if (ERROR) {
+  //     return;
+  //   }
+  //   let schema =
+  //     {
+  //       type: DMS.srcChain.type,
+  //       name: DMS.srcChain.name,
+  //       message: MsgPrompt + DMS.srcChain.message
+  //     };
+  //   self.prompt([schema], function (result) {
+  //     let srcChainIndex = result[DMS.srcChain.name];
+  //     checkExit(srcChainIndex);
+  //     // validate
+  //     let validate = false;
+  //     let srcChain;
+  //     if (srcChainIndex) {
+  //       srcChain = srcChainArray[srcChainIndex];
+  //     }
+  //     if (srcChain) {
+  //       validate = true;
+  //     }
+  //     if (!validate) {
+  //       vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+  //       loadSrcChain(self, args, resolve, reject);
+  //     } else {
+  //       resolve(srcChain);
+  //     }
+  //   });
+  // }
+  // async function loadDstChain(v, args, resolve, reject) {
+  //   let self = v;
+  //   let ERROR = false;
+  //   let MsgPrompt = '';
+  //   let dstChainArray = [];
+  //   try {
+  //     let dstChainMap = global.crossInvoker.getDstChainName(args.srcChain);
+  //     MsgPrompt += sprintf("%10s %56s\r\n", "dst chain", "chain address");
+  //     // console.log("dstChainMap:", dstChainMap);
+  //     let index = 0;
+  //     for (let chain of dstChainMap) {
+  //       index++;
+  //       let keyTemp = chain[0];
+  //       let valueTemp = chain[1];
+  //       // if (valueTemp.tokenStand === 'E20'){
+  //       //   let tokenSymbol = await ccUtil.getErc20SymbolInfo(keyTemp);
+  //       //   // console.log("initChainsSymbol ",tokenSymbol);
+  //       //   valueTemp.tokenSymbol = tokenSymbol;
+  //       // }
+  //       dstChainArray[index] = chain;
+  //       dstChainArray[keyTemp] = chain;
+  //       let indexString = (index) + ': ' + valueTemp.tokenSymbol;
+  //       MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
+  //     }
+  //   } catch (e) {
+  //     ERROR = true;
+  //     reject(ERROR_MESSAGE.DST_ERROR + e.message);
+  //   }
+  //   if (ERROR) {
+  //     return;
+  //   }
+  //   let schema =
+  //     {
+  //       type: DMS.dstChain.type,
+  //       name: DMS.dstChain.name,
+  //       message: MsgPrompt + DMS.dstChain.message
+  //     };
+  //   self.prompt([schema], function (result) {
+  //     let dstChainIndex = result[DMS.dstChain.name];
+  //     checkExit(dstChainIndex);
+  //     // validate
+  //     let validate = false;
+  //     let dstChain;
+  //     if (dstChainIndex) {
+  //       dstChain = dstChainArray[dstChainIndex];
+  //     }
+  //     if (dstChain) {
+  //       validate = true;
+  //     }
+  //     if (!validate) {
+  //       vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+  //       loadDstChain(self, args, resolve, reject);
+  //     } else {
+  //       resolve(dstChain);
+  //     }
+  //   });
+  // }
   async function loadFromAccount(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
