@@ -73,7 +73,7 @@ exports.DMS = {
   'txHash': {
     type: 'input',
     name: 'txHash',
-    message: _colorStart + 'Input the index of lock hash: ' + _colorEnd
+    message: _colorStart + 'Input HashX: ' + _colorEnd
   }
 
 };

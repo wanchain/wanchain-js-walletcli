@@ -231,8 +231,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("tx:", tx);
         //================== gasPrice ==================
         let gasPrice = await new Promise(function (resolve, reject) {
           loadGasPrice(self, args, resolve, reject);
@@ -243,8 +241,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("gasPrice:", gasPrice);
         //================== gasLimit ==================
         let gasLimit = await new Promise(function (resolve, reject) {
           loadGasLimit(self, args, resolve, reject);
@@ -255,8 +251,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("gasLimit:", gasLimit);
         //================== password ==================
         let password = await new Promise(function (resolve, reject) {
           loadPassword(self, args, resolve, reject);
@@ -267,9 +261,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("password:", password);
-        //
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
         // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
         let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
@@ -919,36 +910,36 @@ async function main(){
   }
   async function loadTxHashList(v, args, resolve, reject) {
     let self = v;
-    let ERROR = false;
     let txHashListMsgPrompt = '';
     let txHashArray = {};
     try {
       let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked']);
-      txHashListMsgPrompt += sprintf("%70s %10s %10s %45s %45s %15s\r\n", "hashX", "src chain", "dst chain", "from", "to", "amount");
       txHashList.forEach(function (value, index) {
         let  displayOrNot = true;
         let   retCheck;
         if(self.action === 'revoke'){
-          retCheck  = ccUtil.canRevoke(value.lockedTime,value.buddyLockedTime,value.status);
+          retCheck  = ccUtil.canRevoke(value.lockedTime, value.buddyLockedTime, value.status);
           displayOrNot = retCheck.code;
         }else{
           if(self.action === 'redeem'){
-            retCheck  = ccUtil.canRefund(value.lockedTime,value.buddyLockedTime,value.status);
+            retCheck  = ccUtil.canRefund(value.lockedTime, value.buddyLockedTime, value.status);
             displayOrNot = retCheck.code;
           }
         }
-        if(displayOrNot == true){
+        if(displayOrNot){
           txHashArray[value.hashX] = value;
           txHashArray[index + 1] = value;
-          let indexString = (index + 1) + ': ' + value.hashX;
-          txHashListMsgPrompt += sprintf("%70s %10s %10s %45s %45s %15s\r\n", indexString, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
+          txHashListMsgPrompt += "=========================================================================\r\n";
+          txHashListMsgPrompt += sprintf("HashX: %s\r\nSource Chain: %s\r\nDestination Chain: %s\r\nFrom: %s\r\n" +
+            "To: %s\r\nAmount: %s\r\n", value.hashX, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
         }
       });
     } catch (e) {
-      ERROR = true;
       reject('get txHash error. ' + e.message);
+      return;
     }
-    if (ERROR) {
+    if (txHashListMsgPrompt.length === 0) {
+      reject(`No transaction for ${self.action} found. Please try later.`);
       return;
     }
     let schema =
