@@ -4,41 +4,41 @@ exports.DMS = {
   'from': {
     type: 'input',
     name: 'from',
-    message: _colorStart + 'Input the index of address: ' + _colorEnd,
-    ethMessage: _colorStart + 'Input the index of wanchain address: ' + _colorEnd,
-    wanMessage: _colorStart + 'Input the index of ethernum address: ' + _colorEnd
+    message: _colorStart + 'Input the index or address: ' + _colorEnd,
+    ethMessage: _colorStart + 'Input the index or Wanchain address: ' + _colorEnd,
+    wanMessage: _colorStart + 'Input the index or Ethereum address: ' + _colorEnd
   },
 
   'srcChain': {
     type: 'input',
     name: 'srcChain',
-    message: _colorStart + 'Input the index of srcChain: ' + _colorEnd
+    message: _colorStart + 'Input the index: ' + _colorEnd
   },
   'dstChain': {
     type: 'input',
     name: 'dstChain',
-    message: _colorStart + 'Input the index of dstChain: ' + _colorEnd
+    message: _colorStart + 'Input the index: ' + _colorEnd
   },
   'chainToken': {
     type: 'input',
     name: 'chainToken',
-    message: _colorStart + 'Input the index of token: ' + _colorEnd
+    message: _colorStart + 'Input the index: ' + _colorEnd
   },
   'StoremanGroup': {
     type: 'input',
     name: 'storeman',
-    message: _colorStart + 'Input the index or StoremanGroup: ' + _colorEnd
+    message: _colorStart + 'Input the index or address: ' + _colorEnd
   },
   'to': {
     type: 'input',
     name: 'to',
-    message: _colorStart + 'Enter recipient\\\'s address: ' + _colorEnd
+    message: _colorStart + 'Input recipient\'s address: ' + _colorEnd
   },
 
   'amount': {
     type: 'input',
     name: 'amount',
-    message: _colorStart + 'Input transaction amount(>=0.02): ' + _colorEnd
+    message: _colorStart + 'Input transaction amount: ' + _colorEnd
   },
 
   'gasPrice': {
@@ -56,34 +56,34 @@ exports.DMS = {
   'password': {
     type: 'password',
     name: 'password',
-    message: _colorStart + 'Input the address Password: ' + _colorEnd
+    message: _colorStart + 'Input the password: ' + _colorEnd
   },
 
   'wanAddress': {
     type: 'input',
     name: 'wanAddress',
-    message: _colorStart + 'Input the index of wanchain address: ' + _colorEnd
+    message: _colorStart + 'Input the index or Wanchain address: ' + _colorEnd
   },
   'ethAddress': {
     type: 'input',
     name: 'ethAddress',
-    message: _colorStart + 'Input the index of ethernum address: ' + _colorEnd
+    message: _colorStart + 'Input the index or Ethereum address: ' + _colorEnd
   },
 
   'txHash': {
     type: 'input',
     name: 'txHash',
-    message: _colorStart + 'Input the index of lockTxHash: ' + _colorEnd
+    message: _colorStart + 'Input the index of lock hash: ' + _colorEnd
   }
 
 };
 
 exports.ERROR_MESSAGE = {
-  INPUT_AGAIN: "please input again. ",
-  SRC_ERROR: "get src chain list error. ",
-  DST_ERROR: "get dst chain list error. ",
-  STOREMAN_ERROR: "get storeman list error. ",
-  FROM_ERROR: "get from account list error. ",
+  INPUT_AGAIN: "Please input again. ",
+  SRC_ERROR: "Get src chain list error. ",
+  DST_ERROR: "Get dst chain list error. ",
+  STOREMAN_ERROR: "Get storeman list error. ",
+  FROM_ERROR: "Get account list error. ",
 
   NOT_NEED: "don't need this method. ",
 

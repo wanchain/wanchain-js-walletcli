@@ -36,7 +36,7 @@ async function main(){
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.LOCK;//['approve','lock','refund','revoke']
         let ERROR = false;
-        console.log("==============================");
+        console.log("============================================================");
         let chainDicItem  = await new Promise(function (resolve, reject) {
           loadSrcChainDic(self, args, resolve, reject);
 
@@ -49,7 +49,6 @@ async function main(){
         let srcChain;
         let dstChain;
         if(chainDicItem[0] !== 'WAN'){
-          console.log("==============================");
           srcChain = await new Promise(function (resolve, reject) {
             loadTokenList(self, args, resolve, reject);
           }).catch(function (err) {
@@ -58,23 +57,23 @@ async function main(){
           });
 
           args.srcChain = srcChain;
-          // console.log("==============================");
+          // console.log("============================================================");
           // console.log("srcChain:", srcChain);
 
           // set dstChain to wan
           //console.log("config.wanTokenAddress", config.wanTokenAddress);
           args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
 
-          // console.log("==============================");
+          // console.log("============================================================");
           // console.log("dstChain:", args.dstChain);
 
         }else{
           // set srcChain to wan
-          console.log("config.wanTokenAddress", config.wanTokenAddress);
+          // console.log("config.wanTokenAddress", config.wanTokenAddress);
           args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
-          // console.log("==============================");
+          // console.log("============================================================");
           // console.log("srcChain:", args.srcChain);
-          // console.log("==============================");
+          // console.log("============================================================");
 
           let dstTokenList = await new Promise(function (resolve, reject) {
             loadDstChainDic(self, args, resolve, reject);
@@ -92,7 +91,7 @@ async function main(){
           });
 
           args.dstChain = dstChain;
-          // console.log("==============================");
+          // console.log("============================================================");
           // console.log("dstChain:", dstChain);
         }
 
@@ -109,7 +108,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        // console.log("==============================");
+        // console.log("============================================================");
         // console.log("from:", from);
         // console.log("srcChain.storemanGroups===========");
         // console.log(srcChain[1].storemenGroup);
@@ -125,7 +124,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("storeman:", storeman);
         let to = await new Promise(function (resolve, reject) {
           loadToAccount(self, args, resolve, reject);
@@ -146,8 +145,8 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
-        console.log("amount:", amount);
+        // console.log("============================================================");
+        // console.log("amount:", amount);
         //================== gasPrice ==================
         let gasPrice = await new Promise(function (resolve, reject) {
           loadGasPrice(self, args, resolve, reject);
@@ -158,8 +157,8 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
-        console.log("gasPrice:", gasPrice);
+        // console.log("============================================================");
+        // console.log("gasPrice:", gasPrice);
         //================== gasLimit ==================
         let gasLimit = await new Promise(function (resolve, reject) {
           loadGasLimit(self, args, resolve, reject);
@@ -170,8 +169,8 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
-        console.log("gasLimit:", gasLimit);
+        // console.log("============================================================");
+        // console.log("gasLimit:", gasLimit);
         //================== password ==================
         let password = await new Promise(function (resolve, reject) {
           loadPassword(self, args, resolve, reject);
@@ -182,8 +181,8 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
-        console.log("password:", password);
+        // console.log("============================================================");
+        // console.log("password:", password);
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
         const input = {};
         input.from = from;
@@ -198,7 +197,7 @@ async function main(){
         // input.dstChain = args.dstChain[1].tokenSymbol;
         //console.log("ret ==",ret);
         ret = await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
-        console.log(ret.result);
+        console.log("txHash:", ret.result);
         callback();
       });
 
@@ -232,7 +231,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("tx:", tx);
         //================== gasPrice ==================
         let gasPrice = await new Promise(function (resolve, reject) {
@@ -244,7 +243,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("gasPrice:", gasPrice);
         //================== gasLimit ==================
         let gasLimit = await new Promise(function (resolve, reject) {
@@ -256,7 +255,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("gasLimit:", gasLimit);
         //================== password ==================
         let password = await new Promise(function (resolve, reject) {
@@ -268,7 +267,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("password:", password);
         //
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
@@ -310,7 +309,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("tx:", tx);
         //================== gasPrice ==================
         let gasPrice = await new Promise(function (resolve, reject) {
@@ -322,7 +321,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("gasPrice:", gasPrice);
         //================== gasLimit ==================
         let gasLimit = await new Promise(function (resolve, reject) {
@@ -334,7 +333,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("gasLimit:", gasLimit);
         //================== password ==================
         let password = await new Promise(function (resolve, reject) {
@@ -346,7 +345,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("==============================");
+        console.log("============================================================");
         console.log("password:", password);
         //
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
@@ -386,9 +385,9 @@ async function main(){
   //         return;
   //       }
   //       args.srcChain = srcChain;
-  //       console.log("==============================");
+  //       console.log("============================================================");
   //       console.log("srcChain:", srcChain);
-  //       console.log("==============================");
+  //       console.log("============================================================");
   //       let from = await new Promise(function (resolve, reject) {
   //         loadFromAccount(self, args, resolve, reject);
   //       }).catch(function (err) {
@@ -398,7 +397,7 @@ async function main(){
   //       if (ERROR) {
   //         return;
   //       }
-  //       console.log("==============================");
+  //       console.log("============================================================");
   //       console.log("from:", from);
   //       let to = await new Promise(function (resolve, reject) {
   //         loadToAccountNormal(self, args, resolve, reject);
@@ -419,7 +418,7 @@ async function main(){
   //       if (ERROR) {
   //         return;
   //       }
-  //       console.log("==============================");
+  //       console.log("============================================================");
   //       console.log("amount:", amount);
   //       //================== gasPrice ==================
   //       let gasPrice = await new Promise(function (resolve, reject) {
@@ -431,7 +430,7 @@ async function main(){
   //       if (ERROR) {
   //         return;
   //       }
-  //       console.log("==============================");
+  //       console.log("============================================================");
   //       console.log("gasPrice:", gasPrice);
   //       //================== gasLimit ==================
   //       let gasLimit = await new Promise(function (resolve, reject) {
@@ -443,7 +442,7 @@ async function main(){
   //       if (ERROR) {
   //         return;
   //       }
-  //       console.log("==============================");
+  //       console.log("============================================================");
   //       console.log("gasLimit:", gasLimit);
   //       //================== password ==================
   //       let password = await new Promise(function (resolve, reject) {
@@ -455,7 +454,7 @@ async function main(){
   //       if (ERROR) {
   //         return;
   //       }
-  //       console.log("==============================");
+  //       console.log("============================================================");
   //       console.log("password:", password);
   //       vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
   //       const input = {};
@@ -529,7 +528,8 @@ async function main(){
     let srcChainArray = [];
     try {
       let srcChainMap = global.crossInvoker.getDstChainName(args.srcChain);
-      MsgPrompt += sprintf("%10s\r\n", "Destination chain");
+      console.log("============================================================");
+      MsgPrompt += sprintf("%10s\r\n", "Destination Chain");
       let index = 0;
       for (let chain of srcChainMap) {
         index++;
@@ -583,7 +583,8 @@ async function main(){
     let srcChainArray = [];
     try {
       //let srcChainMap = global.crossInvoker.getSrcChainDic();
-      MsgPrompt += sprintf("%10s %56s\r\n", "Token symbol","Token addr");
+      console.log("============================================================");
+      MsgPrompt += sprintf("%-15s%56s\r\n", "Token Symbol","Token Address");
       let index = 0;
       for (let token of tokenList) {
         // console.log("token");
@@ -594,7 +595,7 @@ async function main(){
         srcChainArray[keyTemp] = token;
         //let indexString = (index) + ': ' + keyTemp;
         let indexString = (index) + ': ' + token[1].tokenSymbol;
-        MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
+        MsgPrompt += sprintf("%-15s%56s\r\n", indexString, keyTemp);
       }
     } catch (e) {
       ERROR = true;
@@ -649,14 +650,15 @@ async function main(){
           addressArr.push(value.address);
         });
         let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.srcChain[0], args.srcChain[1].tokenType);
-        fromMsgPrompt += sprintf("%46s %26s %26s\r\n", `${args.srcChain[1].tokenSymbol} address`, "eth balance", `${args.srcChain[1].tokenSymbol} balance`);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "ETH Address", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let ethBalance = web3.fromWei(value.balance);
           let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
         });
       } catch (e) {
         ERROR = true;
@@ -665,13 +667,14 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'ETH') {
       try {
         let ethAddressList = await ccUtil.getEthAccountsInfo();
-        fromMsgPrompt += sprintf("%46s %26s\r\n", `${args.srcChain[1].tokenSymbol} address`, "eth balance");
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", `${args.srcChain[1].tokenSymbol} Address`, "ETH Balance");
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance];
           ethAddressArray[index + 1] = [value.address, value.balance];
           let ethBalance = web3.fromWei(value.balance);
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%46s %26s\r\n", indexString, ethBalance);
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
         });
       } catch (e) {
         ERROR = true;
@@ -685,14 +688,15 @@ async function main(){
           addressArr.push(value.address);
         });
         let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.dstChain[1].buddy, args.srcChain[1].tokenType);
-        fromMsgPrompt += sprintf("%46s %26s %26s\r\n", "WAN address", "balance", `W${args.dstChain[1].tokenSymbol} balance`);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "WAN Address", "Balance", `W${args.dstChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
           let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
           wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
         });
       } catch (e) {
         ERROR = true;
@@ -756,14 +760,15 @@ async function main(){
           addressArr.push(value.address);
         });
         let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.srcChain[0], args.srcChain[1].tokenType);
-        fromMsgPrompt += sprintf("%46s %26s %26s\r\n", `${args.srcChain[1].tokenSymbol} address`, "eth balance", `${args.srcChain[1].tokenSymbol} balance`);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "ETH Address", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let ethBalance = web3.fromWei(value.balance);
           let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
         });
       } catch (e) {
         ERROR = true;
@@ -772,13 +777,14 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'ETH') {
       try {
         let ethAddressList = await ccUtil.getEthAccountsInfo();
-        fromMsgPrompt += sprintf("%46s %26s\r\n", `${args.srcChain[1].tokenSymbol} address`, "eth balance");
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", `${args.srcChain[1].tokenSymbol} Address`, "ETH Balance");
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance];
           ethAddressArray[index + 1] = [value.address, value.balance];
           let ethBalance = web3.fromWei(value.balance);
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%46s %26s\r\n", indexString, ethBalance);
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
         });
       } catch (e) {
         ERROR = true;
@@ -792,14 +798,15 @@ async function main(){
           addressArr.push(value.address);
         });
         let tokenBalanceList = await ccUtil.getMultiEthBalances(addressArr,args.srcChain[1].tokenType);
-        fromMsgPrompt += sprintf("%46s %26s %26s\r\n", "WAN address", "balance", `WAN balance`);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "WAN Address", "Balance", `WAN Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
           let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
           wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
         });
       } catch (e) {
         ERROR = true;
@@ -869,12 +876,13 @@ async function main(){
     try {
       let smgList = global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
       // console.log("smgList:", smgList)
-      storemanMsgPrompt += sprintf("%26s %26s\r\n", "stroeman address", "txFeeRatio");
+      console.log("============================================================");
+      storemanMsgPrompt += sprintf("%-60s %26s\r\n", "Storeman Group Address", "Fee Ratio");
       smgList.forEach(function (value, index) {
         smgsArray[value.storemenGroupAddr] = value;
         smgsArray[index + 1] = value;
         let indexString = (index + 1) + ': ' + value.storemenGroupAddr;
-        storemanMsgPrompt += sprintf("%26s %26s\r\n", indexString, value.txFeeRatio);
+        storemanMsgPrompt += sprintf("%-60s %26s\r\n", indexString, value.txFeeRatio);
       });
     } catch (e) {
       ERROR = true;
