@@ -469,7 +469,7 @@ async function main(){
   //     });
   //   });
   vorpal.delimiter("wallet-cli$ ").show();
-  
+
   async function loadSrcChainDic(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
@@ -923,15 +923,18 @@ async function main(){
     let txHashListMsgPrompt = '';
     let txHashArray = {};
     try {
-      let txHashList = global.wanDb.getItemAll(config.crossCollection,'status',['BuddyLocked']);
+      let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked']);
       txHashListMsgPrompt += sprintf("%70s %10s %10s %45s %45s %15s\r\n", "hashX", "src chain", "dst chain", "from", "to", "amount");
       txHashList.forEach(function (value, index) {
         let  displayOrNot = true;
+        let   retCheck;
         if(self.action === 'revoke'){
-            displayOrNot = ccUtil.canRevoke(value.lockedTime,value.buddyLockedTime,value.status);
+          retCheck  = ccUtil.canRevoke(value.lockedTime,value.buddyLockedTime,value.status);
+          displayOrNot = retCheck.code;
         }else{
           if(self.action === 'redeem'){
-            displayOrNot = ccUtil.canRefund(value.lockedTime,value.buddyLockedTime,value.status);
+            retCheck  = ccUtil.canRefund(value.lockedTime,value.buddyLockedTime,value.status);
+            displayOrNot = retCheck.code;
           }
         }
         if(displayOrNot == true){

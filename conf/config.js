@@ -185,7 +185,7 @@ config.databasePath       =  path.join(config.databasePath, 'LocalDb');
   config.btcKeyStorePath        = '';                        // BTC
 }
 
-config.crossDbname              = 'crossTransDb2.1';
+config.crossDbname              = 'wanchainDb';
 config.crossCollection          = 'crossTrans';             // E20 & ETH
 config.crossCollectionBtc       = 'crossTransBtc';
 
