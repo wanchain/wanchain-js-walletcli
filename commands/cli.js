@@ -7,6 +7,13 @@ let ethUtil     = require('ethereumjs-util');
 let config      = require('../conf/config');
 const Web3      = require("web3");
 let web3        = new Web3(null);
+let ret         = {
+    // true: success false: error  default true
+    code: true,
+    // success: return the result
+    // error  : return the error
+    result: null
+};
 let {DMS, ERROR_MESSAGE} = require('../schema/DMS');
 let walletCore  = new WalletCore(config);
 config = walletCore.config;
@@ -19,7 +26,7 @@ async function main(){
     REVOKE: 'REVOKE'
   };
   vorpal
-    .command('lock', 'lock')
+    .command('lock', 'lock token on source chain')
     .cancel(function () {
       process.exit(0);
     })
@@ -189,17 +196,20 @@ async function main(){
         input.password = password;
         // input.srcChain = args.srcChain[1].tokenSymbol;
         // input.dstChain = args.dstChain[1].tokenSymbol;
-        let ret = await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
+        //console.log("ret ==",ret);
+        ret = await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
+        console.log(ret.result);
         callback();
       });
 
     });
   vorpal
-    .command('refund', 'refund')
+    .command('redeem', 'redeem token on destination chain')
     .cancel(function () {
       process.exit(0);
     })
     .action(function (args, callback) {
+      this.action = 'redeem';
       let self = this;
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.REFUND;//['approve','lock','refund','revoke']
@@ -274,16 +284,18 @@ async function main(){
         input.password = password;
         console.log("srcChain:",srcChain);
         console.log("dstChain:",dstChain);
-        await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+        ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+        console.log(ret.result);
         callback();
       });
     });
   vorpal
-    .command('revoke', 'revoke')
+    .command('revoke', 'revoke token on source chain')
     .cancel(function () {
       process.exit(0);
     })
     .action(function (args, callback) {
+      this.action = 'revoke';
       let self = this;
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.REVOKE;//['approve','lock','refund','revoke']
@@ -349,7 +361,8 @@ async function main(){
         input.password = password;
         console.log("srcChain:",srcChain);
         console.log("dstChain:",dstChain);
-        await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+        ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+        console.log(ret.result);
         callback();
       });
     });
@@ -457,6 +470,7 @@ async function main(){
   //     });
   //   });
   vorpal.delimiter("wallet-cli$ ").show();
+  
   async function loadSrcChainDic(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
@@ -569,7 +583,7 @@ async function main(){
     let srcChainArray = [];
     try {
       //let srcChainMap = global.crossInvoker.getSrcChainDic();
-      MsgPrompt += sprintf("%10s %56s\r\n", "token symbol","token addr");
+      MsgPrompt += sprintf("%10s %56s\r\n", "Token symbol","Token addr");
       let index = 0;
       for (let token of tokenList) {
         // console.log("token");
@@ -593,7 +607,7 @@ async function main(){
       {
         type: DMS.srcChain.type,
         name: DMS.srcChain.name,
-        message: MsgPrompt + DMS.srcChain.message
+        message: MsgPrompt + DMS.chainToken.message
       };
     self.prompt([schema], function (result) {
       let srcChainIndex = result[DMS.srcChain.name];
@@ -615,114 +629,7 @@ async function main(){
       }
     });
   }
-  // async function loadSrcChain(v, args, resolve, reject) {
-  //   let self = v;
-  //   let ERROR = false;
-  //   let MsgPrompt = '';
-  //   let srcChainArray = [];
-  //   try {
-  //     let srcChainMap = global.crossInvoker.getSrcChainName();
-  //     MsgPrompt += sprintf("%10s %56s\r\n", "src chain", "chain address");
-  //     let index = 0;
-  //     for (let chain of srcChainMap) {
-  //       index++;
-  //       let keyTemp = chain[0];
-  //       let valueTemp = chain[1];
-  //       srcChainArray[index] = chain;
-  //       srcChainArray[keyTemp] = chain;
-  //       let indexString = (index) + ': ' + valueTemp.tokenSymbol;
-  //       MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
-  //     }
-  //   } catch (e) {
-  //     ERROR = true;
-  //     reject(ERROR_MESSAGE.SRC_ERROR + e.message);
-  //   }
-  //   if (ERROR) {
-  //     return;
-  //   }
-  //   let schema =
-  //     {
-  //       type: DMS.srcChain.type,
-  //       name: DMS.srcChain.name,
-  //       message: MsgPrompt + DMS.srcChain.message
-  //     };
-  //   self.prompt([schema], function (result) {
-  //     let srcChainIndex = result[DMS.srcChain.name];
-  //     checkExit(srcChainIndex);
-  //     // validate
-  //     let validate = false;
-  //     let srcChain;
-  //     if (srcChainIndex) {
-  //       srcChain = srcChainArray[srcChainIndex];
-  //     }
-  //     if (srcChain) {
-  //       validate = true;
-  //     }
-  //     if (!validate) {
-  //       vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
-  //       loadSrcChain(self, args, resolve, reject);
-  //     } else {
-  //       resolve(srcChain);
-  //     }
-  //   });
-  // }
-  // async function loadDstChain(v, args, resolve, reject) {
-  //   let self = v;
-  //   let ERROR = false;
-  //   let MsgPrompt = '';
-  //   let dstChainArray = [];
-  //   try {
-  //     let dstChainMap = global.crossInvoker.getDstChainName(args.srcChain);
-  //     MsgPrompt += sprintf("%10s %56s\r\n", "dst chain", "chain address");
-  //     // console.log("dstChainMap:", dstChainMap);
-  //     let index = 0;
-  //     for (let chain of dstChainMap) {
-  //       index++;
-  //       let keyTemp = chain[0];
-  //       let valueTemp = chain[1];
-  //       // if (valueTemp.tokenStand === 'E20'){
-  //       //   let tokenSymbol = await ccUtil.getErc20SymbolInfo(keyTemp);
-  //       //   // console.log("initChainsSymbol ",tokenSymbol);
-  //       //   valueTemp.tokenSymbol = tokenSymbol;
-  //       // }
-  //       dstChainArray[index] = chain;
-  //       dstChainArray[keyTemp] = chain;
-  //       let indexString = (index) + ': ' + valueTemp.tokenSymbol;
-  //       MsgPrompt += sprintf("%10s %56s\r\n", indexString, keyTemp);
-  //     }
-  //   } catch (e) {
-  //     ERROR = true;
-  //     reject(ERROR_MESSAGE.DST_ERROR + e.message);
-  //   }
-  //   if (ERROR) {
-  //     return;
-  //   }
-  //   let schema =
-  //     {
-  //       type: DMS.dstChain.type,
-  //       name: DMS.dstChain.name,
-  //       message: MsgPrompt + DMS.dstChain.message
-  //     };
-  //   self.prompt([schema], function (result) {
-  //     let dstChainIndex = result[DMS.dstChain.name];
-  //     checkExit(dstChainIndex);
-  //     // validate
-  //     let validate = false;
-  //     let dstChain;
-  //     if (dstChainIndex) {
-  //       dstChain = dstChainArray[dstChainIndex];
-  //     }
-  //     if (dstChain) {
-  //       validate = true;
-  //     }
-  //     if (!validate) {
-  //       vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
-  //       loadDstChain(self, args, resolve, reject);
-  //     } else {
-  //       resolve(dstChain);
-  //     }
-  //   });
-  // }
+
   async function loadFromAccount(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
@@ -960,36 +867,8 @@ async function main(){
     let smgsArray = {};
     let storemanMsgPrompt = '';
     try {
-      // if (args.srcChain[1].tokenStand === 'ETH' || args.dstChain[1].tokenStand === 'ETH') {//ETH
-      //
-      //   smgList = await ccUtil.getEthSmgList(args.srcChain[1].tokenType);
-      //
-      //
-      // } else if (args.srcChain[1].tokenStand === 'E20' || args.dstChain[1].tokenStand === 'E20') {
-      //
-      //   smgList = await ccUtil.syncErc20StoremanGroups(args.dstChain[0]);
-      //
-      // } else {
-      //   vorpal.log("[loadStoremanGroups]::: ERROR tokenStand.");
-      //   ERROR = true;
-      // }
-      //
-      // if (ERROR) {
-      //   return;
-      // }
-      // let smgList;
-      // if (args.action === ACTION.LOCK) {
-      //   smgList = args.srcChain[1].storemenGroup;
-      // } else if (args.action === ACTION.REFUND) {
-      //   smgList = srcChain[1].storemenGroup;
-      // } else if (args.action === ACTION.REVOKE) {
-      //   smgList = srcChain[1].storemenGroup;
-      // } else {
-      //   console.log("don't need storeman.")
-      //   return;
-      // }
       let smgList = global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
-      console.log("smgList:", smgList)
+      // console.log("smgList:", smgList)
       storemanMsgPrompt += sprintf("%26s %26s\r\n", "stroeman address", "txFeeRatio");
       smgList.forEach(function (value, index) {
         smgsArray[value.storemenGroupAddr] = value;
@@ -1036,13 +915,23 @@ async function main(){
     let txHashListMsgPrompt = '';
     let txHashArray = {};
     try {
-      let txHashList = global.wanDb.filterNotContains(config.crossCollection,'status',['Refunded','Revoked']);
+      let txHashList = global.wanDb.getItemAll(config.crossCollection,'status',['BuddyLocked']);
       txHashListMsgPrompt += sprintf("%70s %10s %10s %45s %45s %15s\r\n", "hashX", "src chain", "dst chain", "from", "to", "amount");
       txHashList.forEach(function (value, index) {
-        txHashArray[value.hashX] = value;
-        txHashArray[index + 1] = value;
-        let indexString = (index + 1) + ': ' + value.hashX;
-        txHashListMsgPrompt += sprintf("%70s %10s %10s %45s %45s %15s\r\n", indexString, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
+        let  displayOrNot = true;
+        if(self.action === 'revoke'){
+            displayOrNot = ccUtil.canRevoke(value.lockedTime,value.buddyLockedTime,value.status);
+        }else{
+          if(self.action === 'redeem'){
+            displayOrNot = ccUtil.canRefund(value.lockedTime,value.buddyLockedTime,value.status);
+          }
+        }
+        if(displayOrNot == true){
+          txHashArray[value.hashX] = value;
+          txHashArray[index + 1] = value;
+          let indexString = (index + 1) + ': ' + value.hashX;
+          txHashListMsgPrompt += sprintf("%70s %10s %10s %45s %45s %15s\r\n", indexString, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
+        }
       });
     } catch (e) {
       ERROR = true;
