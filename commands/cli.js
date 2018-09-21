@@ -456,7 +456,7 @@ async function main(){
   //       callback();
   //     });
   //   });
-  vorpal.delimiter("wallet1$ ").show();
+  vorpal.delimiter("wallet-cli$ ").show();
   async function loadSrcChainDic(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
