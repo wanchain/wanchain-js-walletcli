@@ -2,8 +2,6 @@ let vorpal      = require('vorpal')();
 let sprintf     = require("sprintf-js").sprintf;
 let ccUtil      = require("wanchain-js-sdk").ccUtil;
 let WalletCore  = require("wanchain-js-sdk").walletCore;
-let wanUtil     = require("wanchain-util");
-let ethUtil     = require('ethereumjs-util');
 let config      = require('../conf/config');
 const Web3      = require("web3");
 let web3        = new Web3(null);
@@ -32,6 +30,7 @@ async function main(){
     })
     .action(function (args, callback) {
       let self = this;
+      let chainName;
 
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.LOCK;//['approve','lock','refund','revoke']
@@ -44,7 +43,7 @@ async function main(){
           ERROR = true;
           callback(err);
         });
-
+        chainName = chainDicItem[0];
         self.tokenList = chainDicItem[1];
         let srcChain;
         let dstChain;
@@ -57,24 +56,10 @@ async function main(){
           });
 
           args.srcChain = srcChain;
-          // console.log("============================================================");
-          // console.log("srcChain:", srcChain);
-
-          // set dstChain to wan
-          //console.log("config.wanTokenAddress", config.wanTokenAddress);
           args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
 
-          // console.log("============================================================");
-          // console.log("dstChain:", args.dstChain);
-
         }else{
-          // set srcChain to wan
-          // console.log("config.wanTokenAddress", config.wanTokenAddress);
           args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
-          // console.log("============================================================");
-          // console.log("srcChain:", args.srcChain);
-          // console.log("============================================================");
-
           let dstTokenList = await new Promise(function (resolve, reject) {
             loadDstChainDic(self, args, resolve, reject);
           }).catch(function (err) {
@@ -91,8 +76,6 @@ async function main(){
           });
 
           args.dstChain = dstChain;
-          // console.log("============================================================");
-          // console.log("dstChain:", dstChain);
         }
 
         if (ERROR) {
@@ -108,13 +91,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        // console.log("============================================================");
-        // console.log("from:", from);
-        // console.log("srcChain.storemanGroups===========");
-        // console.log(srcChain[1].storemenGroup);
-        // console.log("dstChain.storemanGroups===========");
-        // dstChain = args.dstChain;
-        // console.log(dstChain[1].storemenGroup);
         let storeman = await new Promise(function (resolve, reject) {
           loadStoremanGroups(self, args, resolve, reject);
         }).catch(function (err) {
@@ -124,8 +100,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("storeman:", storeman);
         let to = await new Promise(function (resolve, reject) {
           loadToAccount(self, args, resolve, reject);
         }).catch(function (err) {
@@ -145,11 +119,15 @@ async function main(){
         if (ERROR) {
           return;
         }
-        // console.log("============================================================");
-        // console.log("amount:", amount);
         //================== gasPrice ==================
+        let promptInfo;
+        if (chainName === 'ETH') {
+          promptInfo = DMS.ethGasPrice;
+        } else {
+          promptInfo = DMS.wanGasPrice;
+        }
         let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
+          loadGasPrice(self, args, promptInfo, resolve, reject);
         }).catch(function (err) {
           ERROR = true;
           callback(err);
@@ -157,8 +135,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        // console.log("============================================================");
-        // console.log("gasPrice:", gasPrice);
         //================== gasLimit ==================
         let gasLimit = await new Promise(function (resolve, reject) {
           loadGasLimit(self, args, resolve, reject);
@@ -169,8 +145,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        // console.log("============================================================");
-        // console.log("gasLimit:", gasLimit);
         //================== password ==================
         let password = await new Promise(function (resolve, reject) {
           loadPassword(self, args, resolve, reject);
@@ -181,8 +155,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        // console.log("============================================================");
-        // console.log("password:", password);
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
         const input = {};
         input.from = from;
@@ -193,9 +165,6 @@ async function main(){
         input.gasPrice = gasPrice;
         input.gasLimit = gasLimit;
         input.password = password;
-        // input.srcChain = args.srcChain[1].tokenSymbol;
-        // input.dstChain = args.dstChain[1].tokenSymbol;
-        //console.log("ret ==",ret);
         ret = await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
         console.log("txHash:", ret.result);
         callback();
@@ -210,17 +179,11 @@ async function main(){
     .action(function (args, callback) {
       this.action = 'redeem';
       let self = this;
+      let promptInfo;
+
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.REFUND;//['approve','lock','refund','revoke']
         let ERROR = false;
-        // input: { from: '0x0d8935721ced2be0d52a99f8dd8894f1ab9b517b',
-        //   storeman: '0x41623962c5d44565de623d53eb677e0f300467d2',
-        //   to: '0x860fb460b01d626e70dd9d95c604c0a1a9f06490',
-        //   amount: '0.0012',
-        //   gasPrice: '100',
-        //   gasLimit: '2000000',
-        //   password: '123456',
-        //   chainType: 'ETH' }
         //================== txHashList   ==================
         let tx = await new Promise(function (resolve, reject) {
           loadTxHashList(self, args, resolve, reject);
@@ -232,8 +195,13 @@ async function main(){
           return;
         }
         //================== gasPrice ==================
+        if (tx.dstChainAddr.toUpperCase() === 'ETH') {
+          promptInfo = DMS.ethGasPrice;
+        } else {
+          promptInfo = DMS.wanGasPrice;
+        }
         let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
+          loadGasPrice(self, args, promptInfo, resolve, reject);
         }).catch(function (err) {
           ERROR = true;
           callback(err);
@@ -262,20 +230,16 @@ async function main(){
           return;
         }
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-        // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
         let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
         let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr,tx.dstChainType);
         const input = {};
-        // input.from = lockTrans.to;
         input.x = tx.x;
         input.hashX = tx.hashX;
         input.gasPrice = gasPrice;
         input.gasLimit = gasLimit;
         input.password = password;
-        console.log("srcChain:",srcChain);
-        console.log("dstChain:",dstChain);
         ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
-        console.log(ret.result);
+        console.log("txHash: ", ret.result);
         callback();
       });
     });
@@ -287,6 +251,8 @@ async function main(){
     .action(function (args, callback) {
       this.action = 'revoke';
       let self = this;
+      let promptInfo;
+
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.REVOKE;//['approve','lock','refund','revoke']
         let ERROR = false;
@@ -300,11 +266,14 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("tx:", tx);
         //================== gasPrice ==================
+        if (tx.srcChainType.toUpperCase() === 'ETH') {
+          promptInfo = DMS.ethGasPrice;
+        } else {
+          promptInfo = DMS.wanGasPrice;
+        }
         let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
+          loadGasPrice(self, args, promptInfo, resolve, reject);
         }).catch(function (err) {
           ERROR = true;
           callback(err);
@@ -312,8 +281,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("gasPrice:", gasPrice);
         //================== gasLimit ==================
         let gasLimit = await new Promise(function (resolve, reject) {
           loadGasLimit(self, args, resolve, reject);
@@ -324,8 +291,6 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("gasLimit:", gasLimit);
         //================== password ==================
         let password = await new Promise(function (resolve, reject) {
           loadPassword(self, args, resolve, reject);
@@ -336,11 +301,7 @@ async function main(){
         if (ERROR) {
           return;
         }
-        console.log("============================================================");
-        console.log("password:", password);
-        //
         vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-        // let lockTrans = collection.findOne({lockTxHash : lockTxHash});
         let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
         let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr,tx.dstChainType);
         const input = {};
@@ -349,116 +310,12 @@ async function main(){
         input.gasPrice = gasPrice;
         input.gasLimit = gasLimit;
         input.password = password;
-        console.log("srcChain:",srcChain);
-        console.log("dstChain:",dstChain);
         ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
-        console.log(ret.result);
+        console.log("txHash: ", ret.result);
         callback();
       });
     });
 
-  // vorpal
-  //   .command('transfer', 'transfer')
-  //   .cancel(function () {
-  //     process.exit(0);
-  //   })
-  //   .action(function (args, callback) {
-  //     let self = this;
-  //     return new Promise(async function (resolve, reject) {
-  //       let ERROR = false;
-  //       let srcChain = await new Promise(function (resolve, reject) {
-  //         loadSrcChain(self, args, resolve, reject);
-  //       }).catch(function (err) {
-  //         ERROR = true;
-  //         callback(err);
-  //       });
-  //       if (ERROR) {
-  //         return;
-  //       }
-  //       args.srcChain = srcChain;
-  //       console.log("============================================================");
-  //       console.log("srcChain:", srcChain);
-  //       console.log("============================================================");
-  //       let from = await new Promise(function (resolve, reject) {
-  //         loadFromAccount(self, args, resolve, reject);
-  //       }).catch(function (err) {
-  //         ERROR = true;
-  //         callback(err);
-  //       });
-  //       if (ERROR) {
-  //         return;
-  //       }
-  //       console.log("============================================================");
-  //       console.log("from:", from);
-  //       let to = await new Promise(function (resolve, reject) {
-  //         loadToAccountNormal(self, args, resolve, reject);
-  //       }).catch(function (err) {
-  //         ERROR = true;
-  //         callback(err);
-  //       });
-  //       if (ERROR) {
-  //         return;
-  //       }
-  //       //================== amount   ==================
-  //       let amount = await new Promise(function (resolve, reject) {
-  //         loadAmount(self, args, resolve, reject);
-  //       }).catch(function (err) {
-  //         ERROR = true;
-  //         callback(err);
-  //       });
-  //       if (ERROR) {
-  //         return;
-  //       }
-  //       console.log("============================================================");
-  //       console.log("amount:", amount);
-  //       //================== gasPrice ==================
-  //       let gasPrice = await new Promise(function (resolve, reject) {
-  //         loadGasPrice(self, args, resolve, reject);
-  //       }).catch(function (err) {
-  //         ERROR = true;
-  //         callback(err);
-  //       });
-  //       if (ERROR) {
-  //         return;
-  //       }
-  //       console.log("============================================================");
-  //       console.log("gasPrice:", gasPrice);
-  //       //================== gasLimit ==================
-  //       let gasLimit = await new Promise(function (resolve, reject) {
-  //         loadGasLimit(self, args, resolve, reject);
-  //       }).catch(function (err) {
-  //         ERROR = true;
-  //         callback(err);
-  //       });
-  //       if (ERROR) {
-  //         return;
-  //       }
-  //       console.log("============================================================");
-  //       console.log("gasLimit:", gasLimit);
-  //       //================== password ==================
-  //       let password = await new Promise(function (resolve, reject) {
-  //         loadPassword(self, args, resolve, reject);
-  //       }).catch(function (err) {
-  //         ERROR = true;
-  //         callback(err);
-  //       });
-  //       if (ERROR) {
-  //         return;
-  //       }
-  //       console.log("============================================================");
-  //       console.log("password:", password);
-  //       vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-  //       const input = {};
-  //       input.from = from;
-  //       input.to = to;
-  //       input.amount = amount;
-  //       input.gasPrice = gasPrice;
-  //       input.gasLimit = gasLimit;
-  //       input.password = password;
-  //       await global.crossInvoker.invokeNormalTrans(args.srcChain,input);
-  //       callback();
-  //     });
-  //   });
   vorpal.delimiter("wallet-cli$ ").show();
 
   async function loadSrcChainDic(v, args, resolve, reject) {
@@ -475,7 +332,6 @@ async function main(){
         {
           index++;
           let keyTemp = chainDicItem[0];
-          let valueTemp = chainDicItem[1];
           srcChainArray[index] = chainDicItem;
           srcChainArray[keyTemp] = chainDicItem;
           let indexString = (index) + ': ' + keyTemp;
@@ -573,19 +429,14 @@ async function main(){
   async function loadTokenList(v, args, resolve, reject) {
     let self = v;
     let tokenList = self.tokenList;
-    // console.log("-----------------");
-    // console.log(tokenList);
     let ERROR = false;
     let MsgPrompt = '';
     let srcChainArray = [];
     try {
-      //let srcChainMap = global.crossInvoker.getSrcChainDic();
       console.log("============================================================");
       MsgPrompt += sprintf("%-15s%56s\r\n", "Token Symbol","Token Address");
       let index = 0;
       for (let token of tokenList) {
-        // console.log("token");
-        // console.log(token);
         index++;
         let keyTemp = token[0];
         srcChainArray[index] = token;
@@ -648,7 +499,7 @@ async function main(){
         });
         let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.srcChain[0], args.srcChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "ETH Address", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(ETH)", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
@@ -687,7 +538,7 @@ async function main(){
         });
         let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.dstChain[1].buddy, args.srcChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "WAN Address", "Balance", `W${args.dstChain[1].tokenSymbol} Balance`);
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "Balance", `W${args.dstChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
           //let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
@@ -740,7 +591,7 @@ async function main(){
         resolve(fromAddress);
       }
     });
-  };
+  }
   async function loadFromAccountNormal(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
@@ -761,7 +612,7 @@ async function main(){
         });
         let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.srcChain[0], args.srcChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "ETH Address", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(ETH)", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
@@ -799,7 +650,7 @@ async function main(){
         });
         let tokenBalanceList = await ccUtil.getMultiEthBalances(addressArr,args.srcChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "WAN Address", "Balance", `WAN Balance`);
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "Balance", `WAN Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
           let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
@@ -850,7 +701,7 @@ async function main(){
         resolve(fromAddress);
       }
     });
-  };
+  }
   async function loadStoremanGroups(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
@@ -859,23 +710,10 @@ async function main(){
       reject(ERROR_MESSAGE.NOT_NEED + e.message);
       return;
     }
-    // let storeman_obj = {
-    //   wanAddress: '0x06daa9379cbe241a84a65b217a11b38fe3b4b063',
-    //   ethAddress: '0x41623962c5d44565de623d53eb677e0f300467d2',
-    //   deposit: '128000000000000000000000',
-    //   txFeeRatio: '10',
-    //   quota: '400000000000000000000',
-    //   inboundQuota: '336936067918620246919',
-    //   outboundQuota: '52710881343454567942',
-    //   receivable: '80000000000000000',
-    //   payable: '10273050737925185139',
-    //   debt: '62983932081379753081'
-    // };
     let smgsArray = {};
     let storemanMsgPrompt = '';
     try {
       let smgList = global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
-      // console.log("smgList:", smgList)
       console.log("============================================================");
       storemanMsgPrompt += sprintf("%-60s %26s\r\n", "Storeman Group Address", "Fee Ratio");
       smgList.forEach(function (value, index) {
@@ -939,8 +777,8 @@ async function main(){
           txHashArray[value.hashX] = value;
           txHashArray[index + 1] = value;
           txHashListMsgPrompt += "=========================================================================\r\n";
-          txHashListMsgPrompt += sprintf("HashX: %s\r\nSource Chain: %s\r\nDestination Chain: %s\r\nFrom: %s\r\n" +
-            "To: %s\r\nAmount: %s\r\n", value.hashX, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
+          txHashListMsgPrompt += sprintf("%d:\r\nHashX: %s\r\nSource Chain: %s\r\nDestination Chain: %s\r\nFrom: %s\r\n" +
+            "To: %s\r\nAmount: %s\r\n", index + 1, value.hashX, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
         }
       });
     } catch (e) {
@@ -952,11 +790,11 @@ async function main(){
       return;
     }
     let schema =
-      {
-        type: DMS.txHash.type,
-        name: DMS.txHash.name,
-        message: txHashListMsgPrompt + DMS.txHash.message
-      };
+    {
+      type: DMS.txHash.type,
+      name: DMS.txHash.name,
+      message: txHashListMsgPrompt + DMS.txHash.message
+    };
     self.prompt([schema], function (result) {
       let txHashIndex = result[DMS.txHash.name];
       checkExit(txHashIndex);
@@ -976,12 +814,10 @@ async function main(){
         resolve(txHashArray[txHashIndex]);
       }
     });
-  };
+  }
   async function loadToAccount(v, args, resolve, reject) {
     let self = v;
-    let ERROR = false;
     if (args.action === ACTION.APPROVE) {
-      ERROR = true;
       reject(ERROR_MESSAGE.NOT_NEED + e.message);
       return;
     }
@@ -1005,9 +841,7 @@ async function main(){
   }
   async function loadToAccountNormal(v, args, resolve, reject) {
     let self = v;
-    let ERROR = false;
     if (args.action === ACTION.APPROVE) {
-      ERROR = true;
       reject(ERROR_MESSAGE.NOT_NEED + e.message);
       return;
     }
@@ -1036,7 +870,6 @@ async function main(){
       checkExit(amount);
       // validate
       let validate = false;
-      //valdateAmount();
       let patrn = /^\d+(\.\d{1,18})?$/;
       if (patrn.test(amount)) {
         validate = true;
@@ -1050,10 +883,10 @@ async function main(){
       }
     });
   }
-  async function loadGasPrice(v, args, resolve, reject) {
+  async function loadGasPrice(v, args, promptInfo, resolve, reject) {
     let self = v;
-    self.prompt([DMS.gasPrice], function (result) {
-      let gasPrice = result[DMS.gasPrice.name];
+    self.prompt([promptInfo], function (result) {
+      let gasPrice = result[promptInfo.name];
       checkExit(gasPrice);
       // validate
       let validate = false;
@@ -1064,7 +897,7 @@ async function main(){
       // next
       if (!validate) {
         vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
-        loadGasPrice(self, args, resolve, reject);
+        loadGasPrice(self, args, promptInfo, resolve, reject);
       } else {
         resolve(gasPrice);
       }
@@ -1091,8 +924,7 @@ async function main(){
     });
   }
   async function loadPassword(v, args, resolve, reject) {
-    let self = v;
-    self.prompt([DMS.password], function (result) {
+    v.prompt([DMS.password], function (result) {
       let password = result[DMS.password.name];
       resolve(password);
     });
@@ -1102,6 +934,6 @@ async function main(){
       process.exit(0);
     }
   }
-};
+}
 main();
 

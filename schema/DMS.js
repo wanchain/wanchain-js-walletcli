@@ -32,7 +32,7 @@ exports.DMS = {
   'to': {
     type: 'input',
     name: 'to',
-    message: _colorStart + 'Input recipient\'s address: ' + _colorEnd
+    message: _colorStart + 'Input receiver account: ' + _colorEnd
   },
 
   'amount': {
@@ -41,10 +41,16 @@ exports.DMS = {
     message: _colorStart + 'Input transaction amount: ' + _colorEnd
   },
 
-  'gasPrice': {
+  'wanGasPrice': {
     type: 'input',
     name: 'gasPrice',
-    message: _colorStart + 'Input gas price (Price limit is between 180Gwin-600Gwin): ' + _colorEnd
+    message: _colorStart + 'Input gas price (Recommend 180Gwin-600Gwin): ' + _colorEnd
+  },
+
+  'ethGasPrice': {
+    type: 'input',
+    name: 'gasPrice',
+    message: _colorStart + 'Input gas price (Recommend 5Gwei-50Gwei): ' + _colorEnd
   },
 
   'gasLimit': {
@@ -73,7 +79,7 @@ exports.DMS = {
   'txHash': {
     type: 'input',
     name: 'txHash',
-    message: _colorStart + 'Input HashX: ' + _colorEnd
+    message: _colorStart + 'Input index or hashX: ' + _colorEnd
   }
 
 };
