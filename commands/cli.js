@@ -514,6 +514,7 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'ETH') {
       try {
         let ethAddressList = await ccUtil.getEthAccountsInfo();
+        args.tokenDecimals = args.srcChain[1].tokenDecimals;
         console.log("============================================================");
         fromMsgPrompt += sprintf("%-46s %26s\r\n", `${args.srcChain[1].tokenSymbol} Address`, "ETH Balance");
         ethAddressList.forEach(function (value, index) {
@@ -521,6 +522,7 @@ async function main(){
           ethAddressArray[index + 1] = [value.address, value.balance];
           let ethBalance = web3.fromWei(value.balance);
           let indexString = (index + 1) + ': ' + value.address;
+
           fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
         });
       } catch (e) {
@@ -719,9 +721,11 @@ async function main(){
       console.log("============================================================");
       storemanMsgPrompt += sprintf("%-50s %20s %10s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
       smgList.forEach(function (value, index) {
+
         smgsArray[value.storemenGroupAddr] = value;
         smgsArray[index + 1] = value;
         let indexString = (index + 1) + ': ' + value.storemenGroupAddr;
+
         if (args.srcChain[1].tokenType === 'WAN') {
           quota = fromTokenWei(value.outboundQuota, args.tokenDecimals);
         } else {
