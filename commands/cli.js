@@ -779,11 +779,11 @@ async function main(){
         let  displayOrNot = true;
         let   retCheck;
         if(self.action === 'revoke'){
-          retCheck  = ccUtil.canRevoke(value.lockedTime, value.buddyLockedTime, value.status);
+          retCheck  = ccUtil.canRevoke(value);
           displayOrNot = retCheck.code;
         }else{
           if(self.action === 'redeem'){
-            retCheck  = ccUtil.canRefund(value.lockedTime, value.buddyLockedTime, value.status);
+            retCheck  = ccUtil.canRefund(value);
             displayOrNot = retCheck.code;
           }
         }
