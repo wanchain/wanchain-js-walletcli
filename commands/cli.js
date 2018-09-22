@@ -471,13 +471,16 @@ async function main(){
       MsgPrompt += sprintf("%10s\r\n", "Source Chain");
       let index = 0;
       for (let chainDicItem of srcChainMap) {
-        index++;
-        let keyTemp = chainDicItem[0];
-        let valueTemp = chainDicItem[1];
-        srcChainArray[index] = chainDicItem;
-        srcChainArray[keyTemp] = chainDicItem;
-        let indexString = (index) + ': ' + keyTemp;
-        MsgPrompt += sprintf("%10s\r\n", indexString);
+        if(chainDicItem[0] !== 'BTC')
+        {
+          index++;
+          let keyTemp = chainDicItem[0];
+          let valueTemp = chainDicItem[1];
+          srcChainArray[index] = chainDicItem;
+          srcChainArray[keyTemp] = chainDicItem;
+          let indexString = (index) + ': ' + keyTemp;
+          MsgPrompt += sprintf("%10s\r\n", indexString);
+        }
       }
     } catch (e) {
       ERROR = true;
@@ -523,13 +526,16 @@ async function main(){
       MsgPrompt += sprintf("%10s\r\n", "Destination Chain");
       let index = 0;
       for (let chain of srcChainMap) {
-        index++;
-        let keyTemp = chain[0];
-        let valueTemp = chain[1];
-        srcChainArray[index] = valueTemp;
-        srcChainArray[keyTemp] = valueTemp;
-        let indexString = (index) + ': ' + keyTemp;
-        MsgPrompt += sprintf("%10s\r\n", indexString);
+        if(chain[0] !== 'BTC')
+        {
+          index++;
+          let keyTemp = chain[0];
+          let valueTemp = chain[1];
+          srcChainArray[index] = valueTemp;
+          srcChainArray[keyTemp] = valueTemp;
+          let indexString = (index) + ': ' + keyTemp;
+          MsgPrompt += sprintf("%10s\r\n", indexString);
+        }        
       }
     } catch (e) {
       ERROR = true;
@@ -647,7 +653,8 @@ async function main(){
           ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
+          //let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
+          let tokenBalance = web3.fromWei(web3.toBigNumber(tokenBalanceList[value.address]));
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
         });
@@ -683,7 +690,8 @@ async function main(){
         fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "WAN Address", "Balance", `W${args.dstChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
-          let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
+          //let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
+          let tokenBalance = web3.fromWei(web3.toBigNumber(tokenBalanceList[value.address]));
           wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
@@ -695,6 +703,7 @@ async function main(){
       }
     } else {
       ERROR = true;
+      console.log("No support BTC in this version!");
       reject(ERROR_MESSAGE.FROM_ERROR + e.message);
     }
     if (ERROR) {
