@@ -56,7 +56,7 @@ exports.DMS = {
   'gasLimit': {
     type: 'input',
     name: 'gasLimit',
-    message: _colorStart + 'Input gas limit: ' + _colorEnd
+    message: _colorStart + 'Input gas limit (Recommend 470000): ' + _colorEnd
   },
 
   'password': {
@@ -90,7 +90,8 @@ exports.ERROR_MESSAGE = {
   DST_ERROR: "Get dst chain list error. ",
   STOREMAN_ERROR: "Get storeman list error. ",
   FROM_ERROR: "Get account list error. ",
-
+  LESS_AMOUNT: "No enough token. ",
+  STOREMAN_NO_FUND: "Storeman quota is not enough. ",
   NOT_NEED: "don't need this method. ",
 
 };

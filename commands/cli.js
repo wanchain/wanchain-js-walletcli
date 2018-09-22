@@ -120,14 +120,13 @@ async function main(){
           return;
         }
         //================== gasPrice ==================
-        let promptInfo;
         if (chainName === 'ETH') {
-          promptInfo = DMS.ethGasPrice;
+          args.promptInfo = DMS.ethGasPrice;
         } else {
-          promptInfo = DMS.wanGasPrice;
+          args.promptInfo = DMS.wanGasPrice;
         }
         let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, promptInfo, resolve, reject);
+          loadGasPrice(self, args, resolve, reject);
         }).catch(function (err) {
           ERROR = true;
           callback(err);
@@ -179,7 +178,6 @@ async function main(){
     .action(function (args, callback) {
       this.action = 'redeem';
       let self = this;
-      let promptInfo;
 
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.REFUND;//['approve','lock','refund','revoke']
@@ -195,13 +193,13 @@ async function main(){
           return;
         }
         //================== gasPrice ==================
-        if (tx.dstChainAddr.toUpperCase() === 'ETH') {
-          promptInfo = DMS.ethGasPrice;
+        if (tx.dstChainType.toUpperCase() === 'ETH') {
+          args.promptInfo = DMS.ethGasPrice;
         } else {
-          promptInfo = DMS.wanGasPrice;
+          args.promptInfo = DMS.wanGasPrice;
         }
         let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, promptInfo, resolve, reject);
+          loadGasPrice(self, args, resolve, reject);
         }).catch(function (err) {
           ERROR = true;
           callback(err);
@@ -251,7 +249,6 @@ async function main(){
     .action(function (args, callback) {
       this.action = 'revoke';
       let self = this;
-      let promptInfo;
 
       return new Promise(async function (resolve, reject) {
         args.action = ACTION.REVOKE;//['approve','lock','refund','revoke']
@@ -268,12 +265,12 @@ async function main(){
         }
         //================== gasPrice ==================
         if (tx.srcChainType.toUpperCase() === 'ETH') {
-          promptInfo = DMS.ethGasPrice;
+          args.promptInfo = DMS.ethGasPrice;
         } else {
-          promptInfo = DMS.wanGasPrice;
+          args.promptInfo = DMS.wanGasPrice;
         }
         let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, promptInfo, resolve, reject);
+          loadGasPrice(self, args, resolve, reject);
         }).catch(function (err) {
           ERROR = true;
           callback(err);
@@ -504,8 +501,9 @@ async function main(){
           ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let ethBalance = web3.fromWei(value.balance);
-          //let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
-          let tokenBalance = web3.fromWei(web3.toBigNumber(tokenBalanceList[value.address]));
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+          args.tokenBalance = tokenBalance;
+          args.tokenDecimals = args.srcChain[1].tokenDecimals;
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
         });
@@ -538,11 +536,12 @@ async function main(){
         });
         let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.dstChain[1].buddy, args.srcChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "Balance", `W${args.dstChain[1].tokenSymbol} Balance`);
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "WAN Balance", `W${args.dstChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
-          //let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
-          let tokenBalance = web3.fromWei(web3.toBigNumber(tokenBalanceList[value.address]));
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+          args.tokenBalance = tokenBalance;
+          args.tokenDecimals = args.dstChain[1].tokenDecimals;
           wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
@@ -574,10 +573,12 @@ async function main(){
       let fromAddress;
       if (fromIndex) {
         if (args.srcChain[1].tokenType === 'WAN') {
-          fromAddress = wanAddressArray[fromIndex] ? wanAddressArray[fromIndex][0] : null;
+          args.from = wanAddressArray[fromIndex];
+          fromAddress = args.from ? args.from[0] : null;
           validate = ccUtil.isWanAddress(fromAddress);
         } else if (args.srcChain[1].tokenType === 'ETH') {
-          fromAddress = ethAddressArray[fromIndex] ? ethAddressArray[fromIndex][0] : null;
+          args.from = ethAddressArray[fromIndex];
+          fromAddress = args.from ? args.from[0] : null;
           validate = ccUtil.isEthAddress(fromAddress);
         }
       } else {
@@ -617,7 +618,7 @@ async function main(){
           ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
         });
@@ -648,12 +649,12 @@ async function main(){
         wanAddressList.forEach(function (value, index) {
           addressArr.push(value.address);
         });
-        let tokenBalanceList = await ccUtil.getMultiEthBalances(addressArr,args.srcChain[1].tokenType);
+        let tokenBalanceList = await ccUtil.getMultiEthBalances(addressArr,args.dstChain[1].tokenType);
         console.log("============================================================");
         fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "Balance", `WAN Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
-          let tokenBalance = web3.toBigNumber(tokenBalanceList[value.address]).div(100000000);
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
@@ -712,15 +713,21 @@ async function main(){
     }
     let smgsArray = {};
     let storemanMsgPrompt = '';
+    let quota;
     try {
       let smgList = global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
       console.log("============================================================");
-      storemanMsgPrompt += sprintf("%-60s %26s\r\n", "Storeman Group Address", "Fee Ratio");
+      storemanMsgPrompt += sprintf("%-50s %20s %10s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
       smgList.forEach(function (value, index) {
         smgsArray[value.storemenGroupAddr] = value;
         smgsArray[index + 1] = value;
         let indexString = (index + 1) + ': ' + value.storemenGroupAddr;
-        storemanMsgPrompt += sprintf("%-60s %26s\r\n", indexString, value.txFeeRatio);
+        if (args.srcChain[1].tokenType === 'WAN') {
+          quota = fromTokenWei(value.outboundQuota, args.tokenDecimals);
+        } else {
+          quota = fromTokenWei(value.inboundQuota, args.tokenDecimals);
+        }
+        storemanMsgPrompt += sprintf("%-50s %20s %10s\r\n", indexString, quota, value.txFeeRatio);
       });
     } catch (e) {
       ERROR = true;
@@ -741,10 +748,16 @@ async function main(){
       let validate = false;
       let storemanAddr;
       if (storemanIndex) {
-        storemanAddr = smgsArray[storemanIndex] ? smgsArray[storemanIndex].storemenGroupAddr : null;
+        args.storeman = smgsArray[storemanIndex];
+        storemanAddr = args.storeman ? args.storeman.storemenGroupAddr : null;
       }
       if (storemanAddr) {
         validate = true;
+        if (args.srcChain[1].tokenType === 'WAN') {
+          args.quota = fromTokenWei(args.storeman.outboundQuota, args.tokenDecimals);
+        } else {
+          args.quota = fromTokenWei(args.storeman.inboundQuota, args.tokenDecimals);
+        }
       }
       // next
       if (!validate) {
@@ -759,6 +772,7 @@ async function main(){
     let self = v;
     let txHashListMsgPrompt = '';
     let txHashArray = {};
+    let idx = 1;
     try {
       let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked']);
       txHashList.forEach(function (value, index) {
@@ -775,10 +789,11 @@ async function main(){
         }
         if(displayOrNot){
           txHashArray[value.hashX] = value;
-          txHashArray[index + 1] = value;
+          txHashArray[idx] = value;
           txHashListMsgPrompt += "=========================================================================\r\n";
           txHashListMsgPrompt += sprintf("%d:\r\nHashX: %s\r\nSource Chain: %s\r\nDestination Chain: %s\r\nFrom: %s\r\n" +
-            "To: %s\r\nAmount: %s\r\n", index + 1, value.hashX, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
+            "To: %s\r\nAmount: %s\r\n", idx, value.hashX, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
+          idx++;
         }
       });
     } catch (e) {
@@ -870,9 +885,18 @@ async function main(){
       checkExit(amount);
       // validate
       let validate = false;
-      let patrn = /^\d+(\.\d{1,18})?$/;
-      if (patrn.test(amount)) {
+      let pattern = /^\d+(\.\d{1,18})?$/;
+      if (pattern.test(amount)) {
         validate = true;
+      }
+      if (validate) {
+        if (web3.toBigNumber(amount).gt(web3.toBigNumber(args.tokenBalance))) {
+          vorpal.log(ERROR_MESSAGE.LESS_AMOUNT);
+          validate = false;
+        } else if (web3.toBigNumber(amount).gt(web3.toBigNumber(args.quota))){
+          vorpal.log(ERROR_MESSAGE.STOREMAN_NO_FUND);
+          validate = false;
+        }
       }
       // next
       if (!validate) {
@@ -883,10 +907,10 @@ async function main(){
       }
     });
   }
-  async function loadGasPrice(v, args, promptInfo, resolve, reject) {
+  async function loadGasPrice(v, args, resolve, reject) {
     let self = v;
-    self.prompt([promptInfo], function (result) {
-      let gasPrice = result[promptInfo.name];
+    self.prompt([args.promptInfo], function (result) {
+      let gasPrice = result[args.promptInfo.name];
       checkExit(gasPrice);
       // validate
       let validate = false;
@@ -897,7 +921,7 @@ async function main(){
       // next
       if (!validate) {
         vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
-        loadGasPrice(self, args, promptInfo, resolve, reject);
+        loadGasPrice(self, args, resolve, reject);
       } else {
         resolve(gasPrice);
       }
@@ -933,6 +957,12 @@ async function main(){
     if (value && value === 'exit') {
       process.exit(0);
     }
+  }
+  function fromTokenWei(tokenWei, decimals) {
+    return web3.toBigNumber(tokenWei).dividedBy('1e' + decimals).toString(10);
+  }
+  function toTokenWei(token, decimals) {
+    return web3.toBigNumber(token).times('1e' + decimals).toString(10);
   }
 }
 main();
