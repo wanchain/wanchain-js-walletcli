@@ -719,7 +719,7 @@ async function main(){
     try {
       let smgList = global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
       console.log("============================================================");
-      storemanMsgPrompt += sprintf("%-50s %20s %10s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
+      storemanMsgPrompt += sprintf("%-50s %25s %20s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
       smgList.forEach(function (value, index) {
 
         smgsArray[value.storemenGroupAddr] = value;
@@ -731,7 +731,7 @@ async function main(){
         } else {
           quota = fromTokenWei(value.inboundQuota, args.tokenDecimals);
         }
-        storemanMsgPrompt += sprintf("%-50s %20s %10s\r\n", indexString, quota, value.txFeeRatio);
+        storemanMsgPrompt += sprintf("%-50s %25s %20s\r\n", indexString, quota, (Number(value.txFeeRatio)*100/10000).toString()+'%');
       });
     } catch (e) {
       ERROR = true;
