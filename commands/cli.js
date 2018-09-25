@@ -502,10 +502,10 @@ async function main(){
           ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let ethBalance = web3.fromWei(value.balance);
           let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
-          args.tokenBalance = tokenBalance;
-          args.tokenDecimals = args.srcChain[1].tokenDecimals;
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          args.tokenBalance = tokenBalance;
+          args.tokenDecimals = args.srcChain[1].tokenDecimals;
         });
       } catch (e) {
         ERROR = true;
@@ -516,14 +516,15 @@ async function main(){
         let ethAddressList = await ccUtil.getEthAccountsInfo();
         args.tokenDecimals = args.srcChain[1].tokenDecimals;
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s\r\n", `${args.srcChain[1].tokenSymbol} Address`, "ETH Balance");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Sender Account(ETH)", "ETH Balance");
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance];
           ethAddressArray[index + 1] = [value.address, value.balance];
           let ethBalance = web3.fromWei(value.balance);
           let indexString = (index + 1) + ': ' + value.address;
-
           fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
+          args.tokenBalance = ethBalance;
+          args.tokenDecimals = '18';
         });
       } catch (e) {
         ERROR = true;
@@ -542,12 +543,12 @@ async function main(){
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
           let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
-          args.tokenBalance = tokenBalance;
-          args.tokenDecimals = args.dstChain[1].tokenDecimals;
           wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
           wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+          args.tokenBalance = tokenBalance;
+          args.tokenDecimals = args.dstChain[1].tokenDecimals;
         });
       } catch (e) {
         ERROR = true;
@@ -623,6 +624,8 @@ async function main(){
           let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          args.tokenBalance = tokenBalance;
+          args.tokenDecimals = args.srcChain[1].tokenDecimals;
         });
       } catch (e) {
         ERROR = true;
@@ -632,13 +635,15 @@ async function main(){
       try {
         let ethAddressList = await ccUtil.getEthAccountsInfo();
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s\r\n", `${args.srcChain[1].tokenSymbol} Address`, "ETH Balance");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Sender Account(ETH)", "ETH Balance");
         ethAddressList.forEach(function (value, index) {
           ethAddressArray[value.address] = [value.address, value.balance];
           ethAddressArray[index + 1] = [value.address, value.balance];
           let ethBalance = web3.fromWei(value.balance);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
+          args.tokenBalance = ethBalance;
+          args.tokenDecimals = '18';
         });
       } catch (e) {
         ERROR = true;
@@ -661,6 +666,8 @@ async function main(){
           wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+          args.tokenBalance = tokenBalance;
+          args.tokenDecimals = args.dstChain[1].tokenDecimals;
         });
       } catch (e) {
         ERROR = true;
@@ -719,7 +726,7 @@ async function main(){
     try {
       let smgList = global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
       console.log("============================================================");
-      storemanMsgPrompt += sprintf("%-50s %25s %20s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
+      storemanMsgPrompt += sprintf("%-45s %30s %10s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
       smgList.forEach(function (value, index) {
 
         smgsArray[value.storemenGroupAddr] = value;
@@ -731,7 +738,7 @@ async function main(){
         } else {
           quota = fromTokenWei(value.inboundQuota, args.tokenDecimals);
         }
-        storemanMsgPrompt += sprintf("%-50s %25s %20s\r\n", indexString, quota, (Number(value.txFeeRatio)*100/10000).toString()+'%');
+        storemanMsgPrompt += sprintf("%-45s %30s %10s\r\n", indexString, quota, (Number(value.txFeeRatio)*100/10000).toString()+'%');
       });
     } catch (e) {
       ERROR = true;
