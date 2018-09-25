@@ -485,8 +485,7 @@ async function main(){
       return;
     }
     let fromMsgPrompt = '';
-    let ethAddressArray = {};
-    let wanAddressArray = {};
+    let addressArray = {};
     if (args.srcChain[1].tokenStand === 'E20') {
       try {
         let ethAddressList = await ccUtil.getEthAccountsInfo();
@@ -498,14 +497,12 @@ async function main(){
         console.log("============================================================");
         fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(ETH)", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
-          ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
-          ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let ethBalance = web3.fromWei(value.balance);
           let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
-          args.tokenBalance = tokenBalance;
-          args.tokenDecimals = args.srcChain[1].tokenDecimals;
+          addressArray[value.address] = [value.address, tokenBalance, args.srcChain[1].tokenDecimals];
+          addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
         ERROR = true;
@@ -514,17 +511,14 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'ETH') {
       try {
         let ethAddressList = await ccUtil.getEthAccountsInfo();
-        args.tokenDecimals = args.srcChain[1].tokenDecimals;
         console.log("============================================================");
         fromMsgPrompt += sprintf("%-46s %26s\r\n", "Sender Account(ETH)", "ETH Balance");
         ethAddressList.forEach(function (value, index) {
-          ethAddressArray[value.address] = [value.address, value.balance];
-          ethAddressArray[index + 1] = [value.address, value.balance];
           let ethBalance = web3.fromWei(value.balance);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
-          args.tokenBalance = ethBalance;
-          args.tokenDecimals = '18';
+          addressArray[value.address] = [value.address, ethBalance, "18"];
+          addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
         ERROR = true;
@@ -543,12 +537,10 @@ async function main(){
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
           let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
-          wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
-          wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
-          args.tokenBalance = tokenBalance;
-          args.tokenDecimals = args.dstChain[1].tokenDecimals;
+          addressArray[value.address] = [value.address, tokenBalance, args.dstChain[1].tokenDecimals];
+          addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
         ERROR = true;
@@ -575,129 +567,11 @@ async function main(){
       let validate = false;
       let fromAddress;
       if (fromIndex) {
+        args.from = addressArray[fromIndex];
+        fromAddress = args.from ? args.from[0] : null;
         if (args.srcChain[1].tokenType === 'WAN') {
-          args.from = wanAddressArray[fromIndex];
-          fromAddress = args.from ? args.from[0] : null;
           validate = ccUtil.isWanAddress(fromAddress);
         } else if (args.srcChain[1].tokenType === 'ETH') {
-          args.from = ethAddressArray[fromIndex];
-          fromAddress = args.from ? args.from[0] : null;
-          validate = ccUtil.isEthAddress(fromAddress);
-        }
-      } else {
-        validate = false;
-      }
-      // next
-      if (!validate) {
-        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
-        loadFromAccount(self, args, resolve, reject);
-      } else {
-        resolve(fromAddress);
-      }
-    });
-  }
-  async function loadFromAccountNormal(v, args, resolve, reject) {
-    let self = v;
-    let ERROR = false;
-    if (args.action === ACTION.APPROVE) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED + e.message);
-      return;
-    }
-    let fromMsgPrompt = '';
-    let ethAddressArray = {};
-    let wanAddressArray = {};
-    if (args.srcChain[1].tokenStand === 'E20') {
-      try {
-        let ethAddressList = await ccUtil.getEthAccountsInfo();
-        let addressArr = [];
-        ethAddressList.forEach(function (value, index) {
-          addressArr.push(value.address);
-        });
-        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.srcChain[0], args.srcChain[1].tokenType);
-        console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(ETH)", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
-        ethAddressList.forEach(function (value, index) {
-          ethAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
-          ethAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
-          let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
-          let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
-          args.tokenBalance = tokenBalance;
-          args.tokenDecimals = args.srcChain[1].tokenDecimals;
-        });
-      } catch (e) {
-        ERROR = true;
-        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
-      }
-    } else if (args.srcChain[1].tokenStand === 'ETH') {
-      try {
-        let ethAddressList = await ccUtil.getEthAccountsInfo();
-        console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Sender Account(ETH)", "ETH Balance");
-        ethAddressList.forEach(function (value, index) {
-          ethAddressArray[value.address] = [value.address, value.balance];
-          ethAddressArray[index + 1] = [value.address, value.balance];
-          let ethBalance = web3.fromWei(value.balance);
-          let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
-          args.tokenBalance = ethBalance;
-          args.tokenDecimals = '18';
-        });
-      } catch (e) {
-        ERROR = true;
-        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
-      }
-    } else if (args.srcChain[1].tokenStand === 'WAN') {
-      try {
-        let wanAddressList = await ccUtil.getWanAccountsInfo();
-        let addressArr = [];
-        wanAddressList.forEach(function (value, index) {
-          addressArr.push(value.address);
-        });
-        let tokenBalanceList = await ccUtil.getMultiEthBalances(addressArr,args.dstChain[1].tokenType);
-        console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "Balance", `WAN Balance`);
-        wanAddressList.forEach(function (value, index) {
-          let wanBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
-          wanAddressArray[value.address] = [value.address, value.balance, tokenBalanceList[value.address]];
-          wanAddressArray[index + 1] = [value.address, value.balance, tokenBalanceList[value.address]];
-          let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
-          args.tokenBalance = tokenBalance;
-          args.tokenDecimals = args.dstChain[1].tokenDecimals;
-        });
-      } catch (e) {
-        ERROR = true;
-        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
-      }
-    } else {
-      ERROR = true;
-      reject(ERROR_MESSAGE.FROM_ERROR + e.message);
-    }
-    if (ERROR) {
-      return;
-    }
-    let schema =
-      {
-        type: DMS.from.type,
-        name: DMS.from.name,
-        message: fromMsgPrompt + DMS.from.message
-      };
-    self.prompt([schema], function (result) {
-      let fromIndex = result[DMS.from.name];
-      checkExit(fromIndex);
-      // validate
-      let validate = false;
-      let fromAddress;
-      if (fromIndex) {
-        if (args.srcChain[1].tokenType === 'WAN') {
-          fromAddress = wanAddressArray[fromIndex] ? wanAddressArray[fromIndex][0] : null;
-          validate = ccUtil.isWanAddress(fromAddress);
-        } else if (args.srcChain[1].tokenType === 'ETH') {
-          fromAddress = ethAddressArray[fromIndex] ? ethAddressArray[fromIndex][0] : null;
           validate = ccUtil.isEthAddress(fromAddress);
         }
       } else {
@@ -728,15 +602,14 @@ async function main(){
       console.log("============================================================");
       storemanMsgPrompt += sprintf("%-45s %30s %10s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
       smgList.forEach(function (value, index) {
-
         smgsArray[value.storemenGroupAddr] = value;
         smgsArray[index + 1] = value;
         let indexString = (index + 1) + ': ' + value.storemenGroupAddr;
 
         if (args.srcChain[1].tokenType === 'WAN') {
-          quota = fromTokenWei(value.outboundQuota, args.tokenDecimals);
+          quota = fromTokenWei(value.outboundQuota, args.from[2]);
         } else {
-          quota = fromTokenWei(value.inboundQuota, args.tokenDecimals);
+          quota = fromTokenWei(value.inboundQuota, args.from[2]);
         }
         storemanMsgPrompt += sprintf("%-45s %30s %10s\r\n", indexString, quota, (Number(value.txFeeRatio)*100/10000).toString()+'%');
       });
@@ -765,9 +638,9 @@ async function main(){
       if (storemanAddr) {
         validate = true;
         if (args.srcChain[1].tokenType === 'WAN') {
-          args.quota = fromTokenWei(args.storeman.outboundQuota, args.tokenDecimals);
+          args.quota = fromTokenWei(args.storeman.outboundQuota, args.from[2]);
         } else {
-          args.quota = fromTokenWei(args.storeman.inboundQuota, args.tokenDecimals);
+          args.quota = fromTokenWei(args.storeman.inboundQuota, args.from[2]);
         }
       }
       // next
@@ -901,7 +774,7 @@ async function main(){
         validate = true;
       }
       if (validate) {
-        if (web3.toBigNumber(amount).gt(web3.toBigNumber(args.tokenBalance))) {
+        if (web3.toBigNumber(amount).gt(web3.toBigNumber(args.from[1]))) {
           vorpal.log(ERROR_MESSAGE.LESS_AMOUNT);
           validate = false;
         } else if (web3.toBigNumber(amount).gt(web3.toBigNumber(args.quota))){
