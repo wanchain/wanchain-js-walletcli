@@ -481,7 +481,7 @@ async function main(){
     let ERROR = false;
     if (args.action === ACTION.APPROVE) {
       ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED + e.message);
+      reject(ERROR_MESSAGE.NOT_NEED);
       return;
     }
     let fromMsgPrompt = '';
@@ -549,7 +549,7 @@ async function main(){
     } else {
       ERROR = true;
       console.log("No support BTC in this version!");
-      reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      reject(ERROR_MESSAGE.FROM_ERROR + "Not support");
     }
     if (ERROR) {
       return;
@@ -591,7 +591,7 @@ async function main(){
     let ERROR = false;
     if (args.action === ACTION.APPROVE) {
       ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED + e.message);
+      reject(ERROR_MESSAGE.NOT_NEED);
       return;
     }
     let smgsArray = {};
@@ -717,7 +717,7 @@ async function main(){
   async function loadToAccount(v, args, resolve, reject) {
     let self = v;
     if (args.action === ACTION.APPROVE) {
-      reject(ERROR_MESSAGE.NOT_NEED + e.message);
+      reject(ERROR_MESSAGE.NOT_NEED);
       return;
     }
     self.prompt([DMS.to], function (result) {
@@ -741,7 +741,7 @@ async function main(){
   async function loadToAccountNormal(v, args, resolve, reject) {
     let self = v;
     if (args.action === ACTION.APPROVE) {
-      reject(ERROR_MESSAGE.NOT_NEED + e.message);
+      reject(ERROR_MESSAGE.NOT_NEED);
       return;
     }
     self.prompt([DMS.to], function (result) {
