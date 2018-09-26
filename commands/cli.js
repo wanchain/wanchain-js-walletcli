@@ -687,8 +687,10 @@ async function main(){
           txHashArray[value.hashX] = value;
           txHashArray[idx] = value;
           txHashListMsgPrompt += "=========================================================================\r\n";
-          txHashListMsgPrompt += sprintf("%d:\r\nHashX: %s\r\nSource Chain: %s\r\nDestination Chain: %s\r\nFrom: %s\r\n" +
-            "To: %s\r\nAmount: %s\r\n", idx, value.hashX, value.srcChainType, value.dstChainType, value.from, value.to, web3.fromWei(value.contractValue));
+          txHashListMsgPrompt += sprintf("%d:\r\nName:  %s\r\nHashX: %s\r\nSource Chain:      %s\r\n" +
+            "Destination Chain: %s\r\nFrom:   %s\r\nTo:     %s\r\nAmount: %s\r\nStatus: %s\r\n",
+            idx, value.tokenSymbol, value.hashX, value.srcChainType, value.dstChainType, value.from, value.to,
+            web3.fromWei(value.contractValue), value.status);
           idx++;
         }
       });
