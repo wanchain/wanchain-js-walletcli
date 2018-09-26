@@ -12,7 +12,10 @@ let ret         = {
     // error  : return the error
     result: null
 };
-let {DMS, ERROR_MESSAGE} = require('../schema/DMS');
+let wanMinGasPrice = 180;
+let ethMinGasPrice = 10;
+let minGasLimit = 470000;
+let {DMS, ERROR_MESSAGE, formatStr} = require('../schema/message');
 let walletCore  = new WalletCore(config);
 config = walletCore.config;
 async function main(){
@@ -23,6 +26,9 @@ async function main(){
     REFUND: 'REFUND',
     REVOKE: 'REVOKE'
   };
+  DMS.wanGasPrice.message = formatStr(DMS.wanGasPrice.message, wanMinGasPrice);
+  DMS.ethGasPrice.message = formatStr(DMS.ethGasPrice.message, ethMinGasPrice);
+  DMS.gasLimit.message = formatStr(DMS.gasLimit.message, minGasLimit);
   vorpal
     .command('lock', 'lock token on source chain')
     .cancel(function () {
@@ -120,10 +126,12 @@ async function main(){
           return;
         }
         //================== gasPrice ==================
-        if (chainName === 'ETH') {
-          args.promptInfo = DMS.ethGasPrice;
-        } else {
+        if (chainName === 'WAN') {
           args.promptInfo = DMS.wanGasPrice;
+          args.minGasPrice = wanMinGasPrice;
+        } else {
+          args.promptInfo = DMS.ethGasPrice;
+          args.minGasPrice = ethMinGasPrice;
         }
         let gasPrice = await new Promise(function (resolve, reject) {
           loadGasPrice(self, args, resolve, reject);
@@ -193,10 +201,12 @@ async function main(){
           return;
         }
         //================== gasPrice ==================
-        if (tx.dstChainType.toUpperCase() === 'ETH') {
-          args.promptInfo = DMS.ethGasPrice;
-        } else {
+        if (tx.dstChainType.toUpperCase() === 'WAN') {
           args.promptInfo = DMS.wanGasPrice;
+          args.minGasPrice = wanMinGasPrice;
+        } else {
+          args.promptInfo = DMS.ethGasPrice;
+          args.minGasPrice = ethMinGasPrice;
         }
         let gasPrice = await new Promise(function (resolve, reject) {
           loadGasPrice(self, args, resolve, reject);
@@ -264,10 +274,12 @@ async function main(){
           return;
         }
         //================== gasPrice ==================
-        if (tx.srcChainType.toUpperCase() === 'ETH') {
-          args.promptInfo = DMS.ethGasPrice;
-        } else {
+        if (tx.srcChainType.toUpperCase() === 'WAN') {
           args.promptInfo = DMS.wanGasPrice;
+          args.minGasPrice = wanMinGasPrice;
+        } else {
+          args.promptInfo = DMS.ethGasPrice;
+          args.minGasPrice = ethMinGasPrice;
         }
         let gasPrice = await new Promise(function (resolve, reject) {
           loadGasPrice(self, args, resolve, reject);
@@ -802,6 +814,10 @@ async function main(){
       if (patrn.test(gasPrice)) {
         validate = true;
       }
+      if (Number(gasPrice) < args.minGasPrice) {
+        vorpal.log(ERROR_MESSAGE.LOW_GAS_PRICE);
+        validate = false;
+      }
       // next
       if (!validate) {
         vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
@@ -821,6 +837,10 @@ async function main(){
       let patrn = /^\d+$/;
       if (patrn.test(gasLimit)) {
         validate = true;
+      }
+      if (Number(gasLimit) < minGasLimit) {
+        vorpal.log(ERROR_MESSAGE.LOW_GAS_LIMIT);
+        validate = false;
       }
       // next
       if (!validate) {

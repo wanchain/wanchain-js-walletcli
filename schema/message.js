@@ -44,19 +44,19 @@ exports.DMS = {
   'wanGasPrice': {
     type: 'input',
     name: 'gasPrice',
-    message: _colorStart + 'Input gas price (Recommend 180Gwin-600Gwin): ' + _colorEnd
+    message: _colorStart + 'Input gas price (Recommend %sGwin-600Gwin): ' + _colorEnd
   },
 
   'ethGasPrice': {
     type: 'input',
     name: 'gasPrice',
-    message: _colorStart + 'Input gas price (Recommend 5Gwei-50Gwei): ' + _colorEnd
+    message: _colorStart + 'Input gas price (Recommend %sGwei-60Gwei): ' + _colorEnd
   },
 
   'gasLimit': {
     type: 'input',
     name: 'gasLimit',
-    message: _colorStart + 'Input gas limit (Recommend 470000): ' + _colorEnd
+    message: _colorStart + 'Input gas limit (Recommend %s): ' + _colorEnd
   },
 
   'password': {
@@ -84,6 +84,17 @@ exports.DMS = {
 
 };
 
+function formatStr(str, ...args) {
+  let strArray = str.split('%s');
+  let retStr = strArray[0];
+  for (let i = 1; i < strArray.length; i++) {
+    retStr += args[i - 1];
+    retStr += strArray[i];
+  }
+  return retStr;
+}
+
+exports.formatStr = formatStr;
 exports.ERROR_MESSAGE = {
   INPUT_AGAIN: "Please input again. ",
   SRC_ERROR: "Get src chain list error. ",
@@ -93,5 +104,6 @@ exports.ERROR_MESSAGE = {
   LESS_AMOUNT: "Balance is not enough. ",
   STOREMAN_NO_FUND: "Storeman quota is not enough. ",
   NOT_NEED: "don't need this method. ",
-
+  LOW_GAS_PRICE: "Gas price is too low.",
+  LOW_GAS_LIMIT: "Gas limit is too low.",
 };
