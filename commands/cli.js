@@ -352,9 +352,6 @@ async function main(){
     });
   vorpal
     .command('balance', 'get balance')
-    .cancel(function () {
-      process.exit(0);
-    })
     .action(function (args, callback) {
       let self = this;
       let chainName;
@@ -421,13 +418,13 @@ async function main(){
         callback();
       });
 
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
     });
 
   vorpal
     .command('list', 'list transaction')
-    .cancel(function () {
-      process.exit(0);
-    })
     .action(function (args, callback) {
       let self = this;
       let chainName;
@@ -494,6 +491,9 @@ async function main(){
         callback();
       });
 
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
     });
 
   vorpal.delimiter("wallet-cli$ ").show();
@@ -1340,17 +1340,7 @@ async function main(){
     if (ERROR) {
       return;
     }
-    vorpal.log("Press any key to continue...");
-    let MsgPrompt = ' ';
-    let schema =
-      {
-        type: DMS.balance.type,
-        name: DMS.balance.name,
-        message: MsgPrompt + DMS.balance.message
-      };
-    self.prompt([schema], function (result) {
-      resolve(result);
-    });
+    resolve();
   }
   async function listTrans( v, args, resolve, reject) {
     let self          = v;
@@ -1382,17 +1372,7 @@ async function main(){
     }else{
       console.log(msgPrompt);
     }
-    msgPrompt = '';
-    vorpal.log("Press any key to continue...");
-    let schema =
-      {
-        type: DMS.balance.type,
-        name: DMS.balance.name,
-        message: msgPrompt + DMS.balance.message
-      };
-    self.prompt([schema], function (result) {
-      resolve(result);
-    });
+    resolve();
   }
 
 }
