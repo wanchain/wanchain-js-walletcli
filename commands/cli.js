@@ -846,6 +846,8 @@ async function main(){
     let txHashListMsgPrompt = '';
     let txHashArray = {};
     let idx = 1;
+    //TODO need to get decimal from chain
+    let decimal = "18";
     try {
       let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked','RedeemSent','RevokeSent','RedeemSending','RevokeSending']);
       txHashList.forEach(function (value, index) {
@@ -863,11 +865,12 @@ async function main(){
         if(displayOrNot){
           txHashArray[value.hashX] = value;
           txHashArray[idx] = value;
-          txHashListMsgPrompt += "=========================================================================\r\n";
-          txHashListMsgPrompt += sprintf("%d:\r\nName:   %s\r\ntxHash: %s\r\nHashX:  %s\r\nSource Chain:      %s\r\n" +
-            "Destination Chain: %s\r\nFrom:   %s\r\nTo:     %s\r\nAmount: %s\r\nStatus: %s\r\n",
-            idx, value.tokenSymbol, value.lockTxHash, value.hashX, value.srcChainType, value.dstChainType, value.from,
-            value.to, web3.fromWei(value.contractValue), value.status);
+          txHashListMsgPrompt += "=====================================================================================\r\n";
+          txHashListMsgPrompt += sprintf("%s:\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n" +
+            "%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n",
+            idx, "Name:", value.tokenSymbol, "LockHash:", value.lockTxHash, "HashX:", value.hashX, "From:", value.from,
+            "To:", value.to, "Source Chain:",value.srcChainType,  "Destination Chain:", value.dstChainType,
+            "Amount:", fromTokenWei(value.contractValue, decimal), "Status:", value.status);
           idx++;
         }
       });
@@ -1343,7 +1346,6 @@ async function main(){
     resolve();
   }
   async function listTrans( v, args, resolve, reject) {
-    let self          = v;
     let records       = {};
     let msgPrompt     ='';
     try {
@@ -1355,12 +1357,12 @@ async function main(){
 
       records = global.wanDb.getItemAll(config.crossCollection,objFilter);
       records.forEach(function (value, index) {
-        msgPrompt += "=========================================================================\r\n";
-        msgPrompt += sprintf("From:\t\t\t\t%s\r\nTo:\t\t\t\t%s\r\nSource Chain:\t\t\t%s\r\n" +
-          "Destination Chain:\t\t%s\r\nToken Symbol:\t\t\t%s\r\nAmount:\t\t\t\t%s\r\nStatus:\t\t\t\t%s\r\n",
-          value.from, value.to, value.srcChainType, value.dstChainType, value.tokenSymbol,
-          fromTokenWei(value.contractValue,decimal),
-          value.status);
+        msgPrompt += "=====================================================================================\r\n";
+        msgPrompt += sprintf("%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n" +
+          "%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n",
+          "Name:", value.tokenSymbol, "LockHash:", value.lockTxHash, "HashX:", value.hashX, "From:", value.from,
+          "To:", value.to, "Source Chain:",value.srcChainType,  "Destination Chain:", value.dstChainType,
+          "Amount:", fromTokenWei(value.contractValue,decimal), "Status:", value.status);
       });
     } catch (e) {
       reject('listTrans error. ' + e.message);
