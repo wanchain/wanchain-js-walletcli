@@ -702,7 +702,7 @@ async function main(){
     let txHashArray = {};
     let idx = 1;
     try {
-      let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked','RefundSent','RevokeSent','RefundSending','RevokeSending']);
+      let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked','RedeemSent','RevokeSent','RedeemSending','RevokeSending']);
       txHashList.forEach(function (value, index) {
         let  displayOrNot = true;
         let   retCheck;
@@ -711,7 +711,7 @@ async function main(){
           displayOrNot = retCheck.code;
         }else{
           if(self.action === 'redeem'){
-            retCheck  = ccUtil.canRefund(value);
+            retCheck  = ccUtil.canRedeem(value);
             displayOrNot = retCheck.code;
           }
         }
