@@ -24,7 +24,7 @@ async function main(){
   const ACTION = {
     APPROVE: 'APPROVE',
     LOCK: 'LOCK',
-    REFUND: 'REFUND',
+    REDEEM: 'REDEEM',
     REVOKE: 'REVOKE'
   };
   DMS.wanGasPrice.message = formatStr(DMS.wanGasPrice.message, wanMinGasPrice);
@@ -32,15 +32,12 @@ async function main(){
   DMS.gasLimit.message = formatStr(DMS.gasLimit.message, minGasLimit);
   vorpal
     .command('lock', 'lock token on source chain')
-    .cancel(function () {
-      process.exit(0);
-    })
     .action(function (args, callback) {
       let self = this;
       let chainName;
 
       return new Promise(async function (resolve, reject) {
-        args.action = ACTION.LOCK;//['approve','lock','refund','revoke']
+        args.action = ACTION.LOCK;//['approve','lock','redeem','revoke']
         let ERROR = false;
         console.log("============================================================");
         let chainDicItem  = await new Promise(function (resolve, reject) {
@@ -187,18 +184,18 @@ async function main(){
         callback();
       });
 
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
     });
   vorpal
     .command('redeem', 'redeem token on destination chain')
-    .cancel(function () {
-      process.exit(0);
-    })
     .action(function (args, callback) {
       this.action = 'redeem';
       let self = this;
 
       return new Promise(async function (resolve, reject) {
-        args.action = ACTION.REFUND;//['approve','lock','refund','revoke']
+        args.action = ACTION.REDEEM;//['approve','lock','redeem','revoke']
         let ERROR = false;
         //================== txHashList   ==================
         let tx = await new Promise(function (resolve, reject) {
@@ -268,18 +265,18 @@ async function main(){
         vorpal.log("txHash: ", ret.result);
         callback();
       });
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
     });
   vorpal
     .command('revoke', 'revoke token on source chain')
-    .cancel(function () {
-      process.exit(0);
-    })
     .action(function (args, callback) {
       this.action = 'revoke';
       let self = this;
 
       return new Promise(async function (resolve, reject) {
-        args.action = ACTION.REVOKE;//['approve','lock','refund','revoke']
+        args.action = ACTION.REVOKE;//['approve','lock','redeem','revoke']
         let ERROR = false;
         //================== txHashList   ==================
         let tx = await new Promise(function (resolve, reject) {
@@ -349,6 +346,9 @@ async function main(){
         vorpal.log("txHash: ", ret.result);
         callback();
       });
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
     });
 
   vorpal.delimiter("wallet-cli$ ").show();
