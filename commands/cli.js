@@ -350,6 +350,151 @@ async function main(){
     .cancel(function () {
       vorpal.ui.cancel();
     });
+  vorpal
+    .command('balance', 'get balance')
+    .cancel(function () {
+      process.exit(0);
+    })
+    .action(function (args, callback) {
+      let self = this;
+      let chainName;
+
+      return new Promise(async function (resolve, reject) {
+        args.action = ACTION.LOCK;//['approve','lock','refund','revoke']
+        let ERROR = false;
+        console.log("============================================================");
+        let chainDicItem  = await new Promise(function (resolve, reject) {
+          loadSrcChainDic(self, args, resolve, reject);
+
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        chainName = chainDicItem[0];
+        self.tokenList = chainDicItem[1];
+        let srcChain;
+        let dstChain;
+        if(chainDicItem[0] !== 'WAN'){
+          srcChain = await new Promise(function (resolve, reject) {
+            loadTokenList(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.srcChain = srcChain;
+          args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+
+        }else{
+          args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+          let dstTokenList = await new Promise(function (resolve, reject) {
+            loadDstChainDic(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          self.tokenList = dstTokenList;
+          let dstChain = await new Promise(function (resolve, reject) {
+            loadTokenList(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.dstChain = dstChain;
+        }
+
+        if (ERROR) {
+          return;
+        }
+        // display balance Token
+        await new Promise(function (resolve, reject) {
+          displayTokenBalance(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        callback();
+      });
+
+    });
+
+  vorpal
+    .command('list', 'list transaction')
+    .cancel(function () {
+      process.exit(0);
+    })
+    .action(function (args, callback) {
+      let self = this;
+      let chainName;
+
+      return new Promise(async function (resolve, reject) {
+        args.action = ACTION.LOCK;//['approve','lock','refund','revoke']
+        let ERROR = false;
+        console.log("============================================================");
+        let chainDicItem  = await new Promise(function (resolve, reject) {
+          loadSrcChainDic(self, args, resolve, reject);
+
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        chainName = chainDicItem[0];
+        self.tokenList = chainDicItem[1];
+        let srcChain;
+        let dstChain;
+        if(chainDicItem[0] !== 'WAN'){
+          srcChain = await new Promise(function (resolve, reject) {
+            loadTokenList(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.srcChain = srcChain;
+          args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+
+        }else{
+          args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+          let dstTokenList = await new Promise(function (resolve, reject) {
+            loadDstChainDic(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          self.tokenList = dstTokenList;
+          let dstChain = await new Promise(function (resolve, reject) {
+            loadTokenList(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.dstChain = dstChain;
+        }
+
+        if (ERROR) {
+          return;
+        }
+        // display balance Token
+        await new Promise(function (resolve, reject) {
+          listTrans(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        callback();
+      });
+
+    });
 
   vorpal.delimiter("wallet-cli$ ").show();
 
@@ -995,6 +1140,261 @@ async function main(){
   function toTokenWei(token, decimals) {
     return web3.toBigNumber(token).times('1e' + decimals).toString(10);
   }
+  async function displayTokenBalance(v, args, resolve, reject){
+    let self = v;
+    let ERROR = false;
+
+    let fromMsgPrompt = '';
+    let addressArray = {};
+    if (args.dstChain[1].tokenStand === 'E20') {
+      try {
+        // source WAN
+        {
+          fromMsgPrompt = '';
+          console.log("Source balance");
+          let wanAddressList = await ccUtil.getWanAccountsInfo();
+          let addressArr = [];
+          wanAddressList.forEach(function (value, index) {
+            addressArr.push(value.address);
+          });
+
+          let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+            args.dstChain[1].buddy,
+            args.srcChain[1].tokenType);
+
+          console.log("============================================================");
+
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Source Account(WAN)", "WAN Balance",
+            `W${args.dstChain[1].tokenSymbol} Balance`);
+          wanAddressList.forEach(function (value, index) {
+            let wanBalance = web3.fromWei(value.balance);
+            let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+            let indexString = (index + 1) + ': ' + value.address;
+            fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+          })
+          console.log(fromMsgPrompt);
+        }
+        // destination E20
+        {
+          // destination token list
+          fromMsgPrompt = '';
+          console.log("Destination balance");
+          let ethAddressList = await ccUtil.getEthAccountsInfo();
+          let addressArr = [];
+          ethAddressList.forEach(function (value, index) {
+            addressArr.push(value.address);
+          });
+          let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+            args.dstChain[0],
+            args.dstChain[1].tokenType);
+
+          console.log("============================================================");
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Destination Account(ETH)", "ETH Balance",
+            `${args.dstChain[1].tokenSymbol} Balance`);
+          ethAddressList.forEach(function (value, index) {
+            let ethBalance = web3.fromWei(value.balance);
+            let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+            let indexString = (index + 1) + ': ' + value.address;
+            fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          });
+          console.log(fromMsgPrompt);
+        }
+
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.dstChain[1].tokenStand === 'ETH') {
+      try {
+        // Source WAN
+        {
+          fromMsgPrompt = '';
+          console.log("Source balance");
+          let wanAddressList = await ccUtil.getWanAccountsInfo();
+          let addressArr = [];
+          wanAddressList.forEach(function (value, index) {
+            addressArr.push(value.address);
+          });
+
+          let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+            args.dstChain[1].buddy,
+            args.srcChain[1].tokenType);
+
+          console.log("============================================================");
+
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Source Account(WAN)", "WAN Balance",
+            `W${args.dstChain[1].tokenSymbol} Balance`);
+          wanAddressList.forEach(function (value, index) {
+            let wanBalance = web3.fromWei(value.balance);
+            let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+            let indexString = (index + 1) + ': ' + value.address;
+            fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+          })
+          console.log(fromMsgPrompt);
+        }
+        // Destination ETH
+        {
+          // destination token list
+          fromMsgPrompt = '';
+          console.log("Destination balance");
+          let ethAddressList = await ccUtil.getEthAccountsInfo();
+          let addressArr = [];
+          ethAddressList.forEach(function (value, index) {
+            addressArr.push(value.address);
+          });
+          console.log("============================================================");
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", "Destination Account(ETH)", "ETH Balance");
+          ethAddressList.forEach(function (value, index) {
+            let ethBalance = web3.fromWei(value.balance);
+            let indexString = (index + 1) + ': ' + value.address;
+            fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
+          });
+          console.log(fromMsgPrompt);
+        }
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.dstChain[1].tokenStand === 'WAN') {
+
+      {
+        // ETH source
+        if(args.srcChain[1].tokenStand === 'ETH')
+        {
+          fromMsgPrompt = '';
+          console.log("Source balance");
+          let ethAddressList = await ccUtil.getEthAccountsInfo();
+          let addressArr = [];
+          ethAddressList.forEach(function (value, index) {
+            addressArr.push(value.address);
+          });
+          console.log("============================================================");
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", "Source Account(ETH)", "ETH Balance");
+          ethAddressList.forEach(function (value, index) {
+            let ethBalance = web3.fromWei(value.balance);
+            let indexString = (index + 1) + ': ' + value.address;
+            fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
+          });
+          console.log(fromMsgPrompt);
+        }
+
+        if(args.srcChain[1].tokenStand === 'E20')
+        //E20 source
+        {
+          fromMsgPrompt = '';
+          console.log("Source balance");
+          let ethAddressList = await ccUtil.getEthAccountsInfo();
+          let addressArr = [];
+          ethAddressList.forEach(function (value, index) {
+            addressArr.push(value.address);
+          });
+          let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+            args.srcChain[0],
+            args.srcChain[1].tokenType);
+
+          console.log("============================================================");
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Source Account(ETH)", "ETH Balance",
+            `${args.srcChain[1].tokenSymbol} Balance`);
+          ethAddressList.forEach(function (value, index) {
+            let ethBalance = web3.fromWei(value.balance);
+            let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+            let indexString = (index + 1) + ': ' + value.address;
+            fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          });
+          console.log(fromMsgPrompt);
+        }
+      }
+      // WAN destination
+      {
+        fromMsgPrompt = '';
+        console.log("Destination balance");
+        let wanAddressList = await ccUtil.getWanAccountsInfo();
+        let addressArr = [];
+        wanAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[1].buddy,
+          args.dstChain[1].tokenType);
+
+        console.log("============================================================");
+
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Source Account(WAN)", "WAN Balance",
+          `W${args.srcChain[1].tokenSymbol} Balance`);
+        wanAddressList.forEach(function (value, index) {
+          let wanBalance = web3.fromWei(value.balance);
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+        })
+        console.log(fromMsgPrompt);
+      }
+
+
+    } else {
+      ERROR = true;
+      console.log("No support BTC in this version!");
+      reject(ERROR_MESSAGE.FROM_ERROR + "Not support");
+    }
+    if (ERROR) {
+      return;
+    }
+    vorpal.log("Press any key to continue...");
+    let MsgPrompt = ' ';
+    let schema =
+      {
+        type: DMS.balance.type,
+        name: DMS.balance.name,
+        message: MsgPrompt + DMS.balance.message
+      };
+    self.prompt([schema], function (result) {
+      resolve(result);
+    });
+  }
+  async function listTrans( v, args, resolve, reject) {
+    let self          = v;
+    let records       = {};
+    let msgPrompt     ='';
+    try {
+      let objFilter = {};
+      objFilter.srcChainType  = args.srcChain[1].tokenType;
+      objFilter.dstChainType  = args.dstChain[1].tokenType;
+      objFilter.tokenSymbol   = args.srcChain[1].tokenSymbol === 'WAN'? args.dstChain[1].tokenSymbol:args.srcChain[1].tokenSymbol;
+      let decimal             = args.srcChain[1].tokenSymbol === 'WAN'? args.dstChain[1].tokenDecimals:args.srcChain[1].tokenDecimals;
+
+      records = global.wanDb.getItemAll(config.crossCollection,objFilter);
+      records.forEach(function (value, index) {
+        msgPrompt += "=========================================================================\r\n";
+        msgPrompt += sprintf("From:\t\t\t\t%s\r\nTo:\t\t\t\t%s\r\nSource Chain:\t\t\t%s\r\n" +
+          "Destination Chain:\t\t%s\r\nToken Symbol:\t\t\t%s\r\nAmount:\t\t\t\t%s\r\nStatus:\t\t\t\t%s\r\n",
+          value.from, value.to, value.srcChainType, value.dstChainType, value.tokenSymbol,
+          fromTokenWei(value.contractValue,decimal),
+          value.status);
+      });
+    } catch (e) {
+      reject('listTrans error. ' + e.message);
+      return;
+    }
+    if(msgPrompt.length === 0){
+      msgPrompt = 'No transaction found';
+      console.log(msgPrompt);
+    }else{
+      console.log(msgPrompt);
+    }
+    msgPrompt = '';
+    vorpal.log("Press any key to continue...");
+    let schema =
+      {
+        type: DMS.balance.type,
+        name: DMS.balance.name,
+        message: msgPrompt + DMS.balance.message
+      };
+    self.prompt([schema], function (result) {
+      resolve(result);
+    });
+  }
+
 }
 main();
 

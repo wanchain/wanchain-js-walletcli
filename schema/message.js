@@ -81,6 +81,11 @@ exports.DMS = {
     type: 'input',
     name: 'txHash',
     message: _colorStart + 'Input index or hashX: ' + _colorEnd
+  },
+  'balance': {
+    type: 'input',
+    name: 'balance',
+    message: _colorStart + ' ' + _colorEnd
   }
 
 };
