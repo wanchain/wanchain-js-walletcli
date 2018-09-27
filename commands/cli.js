@@ -670,7 +670,7 @@ async function main(){
     let txHashArray = {};
     let idx = 1;
     try {
-      let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked']);
+      let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked','RefundSent','RevokeSent']);
       txHashList.forEach(function (value, index) {
         let  displayOrNot = true;
         let   retCheck;
