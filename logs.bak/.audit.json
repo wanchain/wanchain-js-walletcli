@@ -1,0 +1,54 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 5
+    },
+    "auditLog": "logs/.audit.json",
+    "files": [
+        {
+            "date": 1537272904278,
+            "name": "logs/crossChainLog.log.2018-09-18",
+            "hash": "d41dcbe66812023fd594892b9d6fa2e7"
+        },
+        {
+            "date": 1537286413070,
+            "name": "logs/crossChainLog.log.2018-09-19",
+            "hash": "628af7ccd676034850dd785ce6dbfc5c"
+        },
+        {
+            "date": 1537338463951,
+            "name": "logs/ccMonitorLog.log.2018-09-19",
+            "hash": "cd07d1e2d3ce89674b460de811c31fdb"
+        },
+        {
+            "date": 1537372808147,
+            "name": "logs/ccMonitorLog.log.2018-09-20",
+            "hash": "5700562dd6c9c79d66494fb574ad36b7"
+        },
+        {
+            "date": 1537372808155,
+            "name": "logs/crossChainLog.log.2018-09-20",
+            "hash": "ffc389caa236edeb99899882213aa027"
+        },
+        {
+            "date": 1537499496112,
+            "name": "logs/crossChainLog.log.2018-09-21",
+            "hash": "fda4f478bcf9574532c64d1978d6d0b9"
+        },
+        {
+            "date": 1537499516332,
+            "name": "logs/ccMonitorLog.log.2018-09-21",
+            "hash": "4fe27dde4b913a333d1fb64f3e70c90a"
+        },
+        {
+            "date": 1537580522938,
+            "name": "logs/crossChainLog.log.2018-09-22",
+            "hash": "2516a4e09ddaa1953904823fd1c81254"
+        },
+        {
+            "date": 1537580525650,
+            "name": "logs/ccMonitorLog.log.2018-09-22",
+            "hash": "b23605347326be97512d0fb9b904de24"
+        }
+    ]
+}
