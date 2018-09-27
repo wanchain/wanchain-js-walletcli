@@ -15,6 +15,7 @@ let ret         = {
 let wanMinGasPrice = 180;
 let ethMinGasPrice = 10;
 let minGasLimit = 470000;
+let wrongPwdStr = "Wrong password";
 let {DMS, ERROR_MESSAGE, formatStr} = require('../schema/message');
 let walletCore  = new WalletCore(config);
 config = walletCore.config;
@@ -176,14 +177,13 @@ async function main(){
           vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
           input.password = password;
           ret = await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
-          if (ret.result !== 'Wrong password') {
+          if (ret.result !== wrongPwdStr) {
             needPwd = false;
           } else {
             vorpal.log(ret.result);
           }
         }
-
-        console.log("txHash:", ret.result);
+        vorpal.log("txHash:", ret.result);
         callback();
       });
 
@@ -238,26 +238,34 @@ async function main(){
           return;
         }
         //================== password ==================
-        let password = await new Promise(function (resolve, reject) {
-          loadPassword(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
-        let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
         let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr,tx.dstChainType);
         const input = {};
         input.x = tx.x;
         input.hashX = tx.hashX;
         input.gasPrice = gasPrice;
         input.gasLimit = gasLimit;
-        input.password = password;
-        ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
-        console.log("txHash: ", ret.result);
+        let needPwd = true;
+        while (needPwd) {
+          let password = await new Promise(function (resolve, reject) {
+            loadPassword(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+          let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
+          input.password = password;
+          ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+          if (ret.result !== wrongPwdStr) {
+            needPwd = false;
+          } else {
+            vorpal.log(ret.result);
+          }
+        }
+        vorpal.log("txHash: ", ret.result);
         callback();
       });
     });
@@ -311,16 +319,6 @@ async function main(){
           return;
         }
         //================== password ==================
-        let password = await new Promise(function (resolve, reject) {
-          loadPassword(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
         let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
         let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr,tx.dstChainType);
         const input = {};
@@ -328,9 +326,27 @@ async function main(){
         input.hashX = tx.hashX;
         input.gasPrice = gasPrice;
         input.gasLimit = gasLimit;
-        input.password = password;
-        ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
-        console.log("txHash: ", ret.result);
+        let needPwd = true;
+        while (needPwd) {
+          let password = await new Promise(function (resolve, reject) {
+            loadPassword(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+          input.password = password;
+          ret = await global.crossInvoker.invoke(srcChain, dstChain, args.action, input);
+          if (ret.result !== wrongPwdStr) {
+            needPwd = false;
+          } else {
+            vorpal.log(ret.result);
+          }
+        }
+        vorpal.log("txHash: ", ret.result);
         callback();
       });
     });
