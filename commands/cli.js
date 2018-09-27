@@ -505,9 +505,12 @@ async function main(){
         ethAddressList.forEach(function (value, index) {
           addressArr.push(value.address);
         });
-        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.srcChain[0], args.srcChain[1].tokenType);
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[0],
+          args.srcChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(ETH)", "ETH Balance", `${args.srcChain[1].tokenSymbol} Balance`);
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(ETH)", "ETH Balance",
+          `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
           let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
@@ -543,9 +546,12 @@ async function main(){
         wanAddressList.forEach(function (value, index) {
           addressArr.push(value.address);
         });
-        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr, args.dstChain[1].buddy, args.srcChain[1].tokenType);
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.dstChain[1].buddy,
+          args.srcChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "WAN Balance", `W${args.dstChain[1].tokenSymbol} Balance`);
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(WAN)", "WAN Balance",
+          `W${args.dstChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
           let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
@@ -730,25 +736,118 @@ async function main(){
   }
   async function loadToAccount(v, args, resolve, reject) {
     let self = v;
+    let ERROR = false;
     if (args.action === ACTION.APPROVE) {
+      ERROR = true;
       reject(ERROR_MESSAGE.NOT_NEED);
       return;
     }
-    self.prompt([DMS.to], function (result) {
-      let to = result[DMS.to.name];
-      checkExit(to);
+    let fromMsgPrompt = '';
+    let addressArray = {};
+    if (args.dstChain[1].tokenStand === 'E20') {
+      try {
+        let ethAddressList = await ccUtil.getEthAccountsInfo();
+        let addressArr = [];
+        ethAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.dstChain[0],
+          args.dstChain[1].tokenType);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Reciever Account(ETH)", "ETH Balance",
+          `${args.dstChain[1].tokenSymbol} Balance`);
+        ethAddressList.forEach(function (value, index) {
+          let ethBalance = web3.fromWei(value.balance);
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          addressArray[value.address] = [value.address, tokenBalance, args.dstChain[1].tokenDecimals];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.dstChain[1].tokenStand === 'ETH') {
+      try {
+        let ethAddressList = await ccUtil.getEthAccountsInfo();
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Reciever Account(ETH)", "ETH Balance");
+        ethAddressList.forEach(function (value, index) {
+          let ethBalance = web3.fromWei(value.balance);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
+          addressArray[value.address] = [value.address, ethBalance, "18"];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.dstChain[1].tokenStand === 'WAN') {
+      try {
+        let wanAddressList = await ccUtil.getWanAccountsInfo();
+        let addressArr = [];
+        wanAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[1].buddy,
+          args.dstChain[1].tokenType);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Reciever Account(WAN)", "WAN Balance",
+          `W${args.srcChain[1].tokenSymbol} Balance`);
+        wanAddressList.forEach(function (value, index) {
+          let wanBalance = web3.fromWei(value.balance);
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
+          addressArray[value.address] = [value.address, tokenBalance, args.srcChain[1].tokenDecimals];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else {
+      ERROR = true;
+      console.log("No support BTC in this version!");
+      reject(ERROR_MESSAGE.FROM_ERROR + "Not support");
+    }
+    if (ERROR) {
+      return;
+    }
+    let schema =
+      {
+        type: DMS.to.type,
+        name: DMS.to.name,
+        message: fromMsgPrompt + DMS.to.message
+      };
+    self.prompt([schema], function (result) {
+      let toIndex = result[DMS.to.name];
+      checkExit(toIndex);
+      // validate
       let validate = false;
-      if (args.dstChain[1].tokenType === 'WAN') {
-        validate = ccUtil.isWanAddress(to);
-      } else if (args.dstChain[1].tokenType === 'ETH') {
-        validate = ccUtil.isEthAddress(to);
+      let toAddress;
+      if (toIndex) {
+        args.to = addressArray[toIndex];
+        toAddress = args.to ? args.to[0] : null;
+        if (args.dstChain[1].tokenType === 'WAN') {
+          validate = ccUtil.isWanAddress(toAddress);
+        } else if (args.dstChain[1].tokenType === 'ETH') {
+          validate = ccUtil.isEthAddress(toAddress);
+        }
+      } else {
+        validate = false;
       }
       // next
       if (!validate) {
         vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
         loadToAccount(self, args, resolve, reject);
       } else {
-        resolve(to);
+        resolve(toAddress);
       }
     });
   }
