@@ -711,8 +711,14 @@ async function main(){
             let keyTemp = item[0]+"-"+subItem[0];
             symbolsArr[index] = subItem;
             symbolsArr[keyTemp] = subItem;
-            let indexString = (index) + ':'+subItem[1].tokenSymbol;
-            MsgPrompt += sprintf("%-15s\r\n", indexString);
+            if(args.chainTypeBalance === 'WAN' && subItem[1].tokenSymbol !== 'WAN'){
+              let indexString = (index) + ':'+'W'+subItem[1].tokenSymbol;
+              MsgPrompt += sprintf("%-15s\r\n", indexString);
+            }else{
+              let indexString = (index) + ':'+subItem[1].tokenSymbol;
+              MsgPrompt += sprintf("%-15s\r\n", indexString);
+            }
+            
         }
       }
     } catch (e) {
