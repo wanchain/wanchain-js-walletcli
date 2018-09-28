@@ -15,6 +15,13 @@ exports.DMS = {
     ethMessage: _colorStart + 'Input the index or Wanchain address: ' + _colorEnd,
     wanMessage: _colorStart + 'Input the index or Ethereum address: ' + _colorEnd
   },
+  'account': {
+    type: 'input',
+    name: 'account',
+    message: _colorStart + 'Input the index or address of account: ' + _colorEnd,
+    ethMessage: _colorStart + 'Input the index or Wanchain address: ' + _colorEnd,
+    wanMessage: _colorStart + 'Input the index or Ethereum address: ' + _colorEnd
+  },
   'srcChain': {
     type: 'input',
     name: 'srcChain',
@@ -108,6 +115,8 @@ exports.ERROR_MESSAGE = {
   STOREMAN_ERROR: "Get storeman list error. ",
   FROM_ERROR: "Get account list error. ",
   TO_ERROR: "Get account list error. ",
+  BALANCE_ERROR:"Get balance error.",
+  ACCOUNT_ERROR: "Get account list error. ",
   LESS_AMOUNT: "Balance is not enough. ",
   STOREMAN_NO_FUND: "Storeman quota is not enough. ",
   NOT_NEED: "don't need this method. ",
