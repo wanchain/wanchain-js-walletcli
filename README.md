@@ -1,12 +1,11 @@
-=====================================================
 Pre-condition
-=====================================================
+-------------
 	1) node version v8.11.3 or higher
 	2) npm  version 5.6.0 or higher
 
-=====================================================
+
 How to install cli wallet?
-=====================================================
+--------------------------
 	step1:
 		mkdir -p <workspace>
 		cd <workspace>
@@ -17,9 +16,9 @@ How to install cli wallet?
 		cd <workspace>/wanchain-js-walletcli
 		npm install
 
-=====================================================
+
 How to start cli wallet?
-=====================================================
+------------------------
 	step1:
 		cd <workspace>/wanchain-js-walletcli
 
@@ -27,9 +26,9 @@ How to start cli wallet?
 		node commands/cli.js
 		wallet-cli$
 
-=====================================================
+
 How to use cli wallet ?
-=====================================================
+-----------------------
 Help
 
 	Commands supported by cli wallet:
@@ -42,9 +41,9 @@ Help
     6.  balance            get balance of selected account or input account for special tokens.
     7.  list               list detailed information of transaction
 
-=====================================================
+
 Examples
-=====================================================
+--------
 
 Example 1: (Lock on ETH chain, redeem on WAN chain)
 
@@ -270,9 +269,9 @@ Example 4 (Revoke on source chain)
     txHash:  0x3b72a63c02a2a806fc26fdf35661d0220f6269cc08f596d9e723ef3ec2f9db65
 
 
-=====================================================
+
 Tips:
-=====================================================
+----
 
     1)  Description of some status of cross transaction
 
