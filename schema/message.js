@@ -93,7 +93,12 @@ exports.DMS = {
     type: 'input',
     name: 'balance',
     message: _colorStart + ' ' + _colorEnd
-  }
+  },
+  'confirmPwd': {
+    type: 'password',
+    name: 'password',
+    message: _colorStart + 'Confirm the password: ' + _colorEnd
+  },
 
 };
 
