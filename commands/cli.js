@@ -475,7 +475,65 @@ async function main(){
     .cancel(function () {
       vorpal.ui.cancel();
     });
+  vorpal
+    .command('create', 'create account')
+    .action(function(args, callback) {
+      let self = this;
+      return new Promise(async function(resolve, reject) {
+        let ERROR = false;
+        console.log("============================================================");
+        let chainDicItem = await new Promise(function(resolve, reject) {
+          loadChainDic(self, args, resolve, reject);
 
+        }).catch(function(err) {
+          ERROR = true;
+          callback(err);
+        });
+
+        let chainType = chainDicItem[0];
+        let password;
+
+        let flag = true;
+        while (flag) {
+          password = await new Promise(function(resolve, reject) {
+            loadPassword(self, args, resolve, reject);
+          }).catch(function(err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          let confirmPwd = await new Promise(function(resolve, reject) {
+            loadConfirmPwd(self, args, resolve, reject);
+          }).catch(function(err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+
+          if (password === confirmPwd) {
+            flag = false;
+          } else {
+            vorpal.log("Password mismatched.");
+          }
+        }
+        let accountAddr;
+        if (chainType.toUpperCase() === 'WAN') {
+          accountAddr = ccUtil.createWanAddr(password);
+        } else {
+          accountAddr = ccUtil.createEthAddr(password);
+        }
+        vorpal.log("Account:", accountAddr);
+        callback();
+      });
+
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
+    });
   vorpal.delimiter("wallet-cli$ ").show();
 
   async function loadSrcChainDic(v, args, resolve, reject) {
@@ -718,7 +776,7 @@ async function main(){
               let indexString = (index) + ':'+subItem[1].tokenSymbol;
               MsgPrompt += sprintf("%-15s\r\n", indexString);
             }
-            
+
         }
       }
     } catch (e) {
@@ -1228,6 +1286,12 @@ async function main(){
       resolve(password);
     });
   }
+  async function loadConfirmPwd(v, args, resolve, reject) {
+    v.prompt([DMS.confirmPwd], function (result) {
+      let password = result[DMS.confirmPwd.name];
+      resolve(password);
+    });
+  }
   function checkExit(value) {
     if (value && value === 'exit') {
       process.exit(0);
@@ -1390,7 +1454,6 @@ async function main(){
       }
     });
   }
-
 }
 main();
 
