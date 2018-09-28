@@ -1239,14 +1239,13 @@ async function main(){
     let symbolInfo    = args.symbolInfoBalance;
     let accountAddr   = args.accountAddr;
     let symbolStr     = args.symbolInfoBalance[1].tokenSymbol;
+
     let tokenBalance;
     try{
       if(args.chainTypeBalance === 'ETH'){
         if(symbolInfo[1].tokenSymbol === 'ETH'){
-          // get balnace, chainType ETH
           tokenBalance = await ccUtil.getEthBalance(args.accountAddr);
         }else{
-          // get tokenbalance, chaintype eth, tokenAddress
           let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr([args.accountAddr],
             symbolInfo[0],
             args.chainTypeBalance);
@@ -1270,9 +1269,6 @@ async function main(){
       reject(ERROR_MESSAGE.BALANCE_ERROR + e.message);
       return;
     }
-    //console.log(accountAddr);
-    //console.log(symbolStr);
-    //console.log(fromTokenWei(tokenBalance.toString(), symbolInfo[1].tokenDecimals));
     let msgPrompt = '';
     msgPrompt     += sprintf("%-46s %26s\r\n", "Account", symbolStr);
     msgPrompt     += sprintf("%-46s %26s\r\n", accountAddr,
