@@ -10,7 +10,6 @@ How to install cli wallet?
 		mkdir -p <workspace>
 		cd <workspace>
 		git clone https://github.com/wanchain/wanchain-js-walletcli.git
-		git clone https://github.com/wanchain/wanchain-js-sdk.git
 
 	step2:
 		cd <workspace>/wanchain-js-walletcli
