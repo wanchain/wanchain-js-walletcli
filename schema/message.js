@@ -11,7 +11,7 @@ exports.DMS = {
   'to': {
     type: 'input',
     name: 'to',
-    message: _colorStart + 'Input the index or address of reciever: ' + _colorEnd,
+    message: _colorStart + 'Input the index or address of receiver: ' + _colorEnd,
     ethMessage: _colorStart + 'Input the index or Wanchain address: ' + _colorEnd,
     wanMessage: _colorStart + 'Input the index or Ethereum address: ' + _colorEnd
   },

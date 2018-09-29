@@ -484,7 +484,6 @@ async function main(){
         console.log("============================================================");
         let chainDicItem = await new Promise(function(resolve, reject) {
           loadChainDic(self, args, resolve, reject);
-
         }).catch(function(err) {
           ERROR = true;
           callback(err);
@@ -1083,7 +1082,7 @@ async function main(){
           args.dstChain[0],
           args.dstChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Reciever Account(ETH)", "ETH Balance",
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Receiver Account(ETH)", "ETH Balance",
           `${args.dstChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
@@ -1101,7 +1100,7 @@ async function main(){
       try {
         let ethAddressList = await ccUtil.getEthAccountsInfo();
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Reciever Account(ETH)", "ETH Balance");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Receiver Account(ETH)", "ETH Balance");
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
           let indexString = (index + 1) + ': ' + value.address;
@@ -1125,7 +1124,7 @@ async function main(){
           args.srcChain[1].buddy,
           args.dstChain[1].tokenType);
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Reciever Account(WAN)", "WAN Balance",
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Receiver Account(WAN)", "WAN Balance",
           `W${args.srcChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
@@ -1281,15 +1280,24 @@ async function main(){
     });
   }
   async function loadPassword(v, args, resolve, reject) {
-    v.prompt([DMS.password], function (result) {
+    let self = v;
+    self.prompt([DMS.password], function (result) {
       let password = result[DMS.password.name];
-      resolve(password);
+      if (password.length === 0) {
+        loadPassword(self, args, resolve, reject);
+      } else {
+        resolve(password);
+      }
     });
   }
   async function loadConfirmPwd(v, args, resolve, reject) {
     v.prompt([DMS.confirmPwd], function (result) {
       let password = result[DMS.confirmPwd.name];
-      resolve(password);
+      if (password.length === 0) {
+        loadConfirmPwd(v, args, resolve, reject);
+      } else {
+        resolve(password);
+      }
     });
   }
   function checkExit(value) {
