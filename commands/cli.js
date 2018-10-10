@@ -6,11 +6,11 @@ let config      = require('../conf/config');
 const Web3      = require("web3");
 let web3        = new Web3(null);
 let ret         = {
-    // true: success false: error  default true
-    code: true,
-    // success: return the result
-    // error  : return the error
-    result: null
+  // true: success false: error  default true
+  code: true,
+  // success: return the result
+  // error  : return the error
+  result: null
 };
 let wanMinGasPrice = 180;
 let ethMinGasPrice = 10;
@@ -402,7 +402,138 @@ async function main(){
     .cancel(function () {
       vorpal.ui.cancel();
     });
+  vorpal
+    .command('transfer', 'transfer coin or token')
+    .action(function (args, callback) {
+      let self = this;
+      let chainName;
 
+      return new Promise(async function (resolve, reject) {
+        args.action = ACTION.LOCK;//['approve','lock','redeem','revoke']
+        let ERROR = false;
+        console.log("============================================================");
+        let chainDicItem  = await new Promise(function (resolve, reject) {
+          loadSrcChainDic(self, args, resolve, reject);
+
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        chainName = chainDicItem[0];
+        self.tokenList = chainDicItem[1];
+        let srcChain;
+        let dstChain;
+        if(chainDicItem[0] !== 'WAN'){
+          srcChain = await new Promise(function (resolve, reject) {
+            loadTokenList(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.srcChain = srcChain;
+          args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+
+        }else{
+          args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+        }
+
+        if (ERROR) {
+          return;
+        }
+
+        let from = await new Promise(function (resolve, reject) {
+          loadFromAccountNormal(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        let to = await new Promise(function (resolve, reject) {
+          loadToAccountNormal(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== amount   ==================
+        let amount = await new Promise(function (resolve, reject) {
+          loadAmountNormal(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== gasPrice ==================
+        if (chainName === 'WAN') {
+          args.promptInfo = DMS.wanGasPrice;
+          args.minGasPrice = wanMinGasPrice;
+        } else {
+          args.promptInfo = DMS.ethGasPrice;
+          args.minGasPrice = ethMinGasPrice;
+        }
+        let gasPrice = await new Promise(function (resolve, reject) {
+          loadGasPrice(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== gasLimit ==================
+        let gasLimit = await new Promise(function (resolve, reject) {
+          loadGasLimit(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== password ==================
+        let needPwd         = true;
+        const input         = {};
+        input.from          = from;
+        input.to            = to;
+        input.amount        = amount;
+        input.gasPrice      = gasPrice;
+        input.gasLimit      = gasLimit;
+
+        while (needPwd) {
+          let password = await new Promise(function (resolve, reject) {
+            loadPassword(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+          input.password = password;
+          ret = await global.crossInvoker.invokeNormalTrans(args.srcChain,input);
+          if (ret.result !== wrongPwdStr) {
+            needPwd = false;
+          } else {
+            vorpal.log(ret.result);
+          }
+        }
+        vorpal.log("txHash:", ret.result);
+        callback();
+      });
+
+    })
+
+    .cancel(function () {
+      vorpal.ui.cancel();
+    });
   vorpal
     .command('list', 'list transaction')
     .action(function (args, callback) {
@@ -661,7 +792,7 @@ async function main(){
           srcChainArray[keyTemp] = valueTemp;
           let indexString = (index) + ': ' + keyTemp;
           MsgPrompt += sprintf("%10s\r\n", indexString);
-        }        
+        }
       }
     } catch (e) {
       ERROR = true;
@@ -748,7 +879,6 @@ async function main(){
       }
     });
   }
-
   async function loadAllSymbolList(v, args, resolve, reject) {
     let self        = v;
     let ERROR       = false;
@@ -763,18 +893,18 @@ async function main(){
         if(item[0] === 'BTC') continue;
         let subMap = item[1];
         for(let subItem of subMap){
-            if(args.chainTypeBalance === 'ETH' && subItem[1].tokenSymbol === 'WAN') continue;
-            index++;
-            let keyTemp = item[0]+"-"+subItem[0];
-            symbolsArr[index] = subItem;
-            symbolsArr[keyTemp] = subItem;
-            if(args.chainTypeBalance === 'WAN' && subItem[1].tokenSymbol !== 'WAN'){
-              let indexString = (index) + ':'+'W'+subItem[1].tokenSymbol;
-              MsgPrompt += sprintf("%-15s\r\n", indexString);
-            }else{
-              let indexString = (index) + ':'+subItem[1].tokenSymbol;
-              MsgPrompt += sprintf("%-15s\r\n", indexString);
-            }
+          if(args.chainTypeBalance === 'ETH' && subItem[1].tokenSymbol === 'WAN') continue;
+          index++;
+          let keyTemp = item[0]+"-"+subItem[0];
+          symbolsArr[index] = subItem;
+          symbolsArr[keyTemp] = subItem;
+          if(args.chainTypeBalance === 'WAN' && subItem[1].tokenSymbol !== 'WAN'){
+            let indexString = (index) + ':'+'W'+subItem[1].tokenSymbol;
+            MsgPrompt += sprintf("%-15s\r\n", indexString);
+          }else{
+            let indexString = (index) + ':'+subItem[1].tokenSymbol;
+            MsgPrompt += sprintf("%-15s\r\n", indexString);
+          }
 
         }
       }
@@ -811,7 +941,6 @@ async function main(){
       }
     });
   }
-
   async function loadFromAccount(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
@@ -928,6 +1057,119 @@ async function main(){
       }
     });
   }
+  async function loadFromAccountNormal(v, args, resolve, reject) {
+    let self = v;
+    let ERROR = false;
+    if (args.action === ACTION.APPROVE) {
+      ERROR = true;
+      reject(ERROR_MESSAGE.NOT_NEED);
+      return;
+    }
+    let fromMsgPrompt = '';
+    let addressArray = {};
+
+    if (args.srcChain[1].tokenStand === 'E20') {
+      try {
+        let ethAddressList = await ccUtil.getEthAccountsInfo();
+        let addressArr = [];
+        ethAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[0],
+          args.srcChain[1].tokenType);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Sender Account(ETH)", "ETH Balance",
+          `${args.srcChain[1].tokenSymbol} Balance`);
+        ethAddressList.forEach(function (value, index) {
+          let ethBalance = web3.fromWei(value.balance);
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          addressArray[value.address] = [value.address, tokenBalance, args.srcChain[1].tokenDecimals];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.srcChain[1].tokenStand === 'ETH') {
+      try {
+        let ethAddressList = await ccUtil.getEthAccountsInfo();
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Sender Account(ETH)", "ETH Balance");
+        ethAddressList.forEach(function (value, index) {
+          let ethBalance = web3.fromWei(value.balance);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
+          addressArray[value.address] = [value.address, ethBalance, "18"];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.srcChain[1].tokenStand === 'WAN') {
+      try {
+        let wanAddressList = await ccUtil.getWanAccountsInfo();
+        let addressArr = [];
+        wanAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Sender Account(WAN)", "WAN Balance");
+        wanAddressList.forEach(function (value, index) {
+          let wanBalance = web3.fromWei(value.balance);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, wanBalance);
+          addressArray[value.address] = [value.address,wanBalance];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else {
+      ERROR = true;
+      console.log("No support BTC in this version!");
+      reject(ERROR_MESSAGE.FROM_ERROR + "Not support");
+    }
+    if (ERROR) {
+      return;
+    }
+    let schema =
+      {
+        type: DMS.from.type,
+        name: DMS.from.name,
+        message: fromMsgPrompt + DMS.from.message
+      };
+    self.prompt([schema], function (result) {
+      let fromIndex = result[DMS.from.name];
+      checkExit(fromIndex);
+      // validate
+      let validate = false;
+      let fromAddress;
+      if (fromIndex) {
+        args.from = addressArray[fromIndex];
+        fromAddress = args.from ? args.from[0] : null;
+        if (args.srcChain[1].tokenType === 'WAN') {
+          validate = ccUtil.isWanAddress(fromAddress);
+        } else if (args.srcChain[1].tokenType === 'ETH') {
+          validate = ccUtil.isEthAddress(fromAddress);
+        }
+      } else {
+        validate = false;
+      }
+      // next
+      if (!validate) {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+        loadFromAccountNormal(self, args, resolve, reject);
+      } else {
+        resolve(fromAddress);
+      }
+    });
+  }
+
   async function loadStoremanGroups(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
@@ -1036,11 +1278,11 @@ async function main(){
       return;
     }
     let schema =
-    {
-      type: DMS.txHash.type,
-      name: DMS.txHash.name,
-      message: txHashListMsgPrompt + DMS.txHash.message
-    };
+      {
+        type: DMS.txHash.type,
+        name: DMS.txHash.name,
+        message: txHashListMsgPrompt + DMS.txHash.message
+      };
     self.prompt([schema], function (result) {
       let txHashIndex = result[DMS.txHash.name];
       checkExit(txHashIndex);
@@ -1180,25 +1422,113 @@ async function main(){
   }
   async function loadToAccountNormal(v, args, resolve, reject) {
     let self = v;
+    let ERROR = false;
     if (args.action === ACTION.APPROVE) {
+      ERROR = true;
       reject(ERROR_MESSAGE.NOT_NEED);
       return;
     }
-    self.prompt([DMS.to], function (result) {
-      let to = result[DMS.to.name];
-      checkExit(to);
+    let fromMsgPrompt = '';
+    let addressArray = {};
+    if (args.srcChain[1].tokenStand === 'E20') {
+      try {
+        let ethAddressList = await ccUtil.getEthAccountsInfo();
+        let addressArr = [];
+        ethAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[0],
+          args.srcChain[1].tokenType);
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", "Receiver Account(ETH)", "ETH Balance",
+          `${args.srcChain[1].tokenSymbol} Balance`);
+        ethAddressList.forEach(function (value, index) {
+          let ethBalance = web3.fromWei(value.balance);
+          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
+          addressArray[value.address] = [value.address, tokenBalance, args.dstChain[1].tokenDecimals];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.srcChain[1].tokenStand === 'ETH') {
+      try {
+        let ethAddressList = await ccUtil.getEthAccountsInfo();
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Receiver Account(ETH)", "ETH Balance");
+        ethAddressList.forEach(function (value, index) {
+          let ethBalance = web3.fromWei(value.balance);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, ethBalance);
+          addressArray[value.address] = [value.address, ethBalance, "18"];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else if (args.srcChain[1].tokenStand === 'WAN') {
+      try {
+        let wanAddressList = await ccUtil.getWanAccountsInfo();
+        let addressArr = [];
+        wanAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-46s %26s\r\n", "Receiver Account(WAN)", "WAN Balance");
+        wanAddressList.forEach(function (value, index) {
+          let wanBalance = web3.fromWei(value.balance);
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-46s %26s\r\n", indexString, wanBalance);
+          addressArray[value.address] = [value.address];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
+    } else {
+      ERROR = true;
+      console.log("No support BTC in this version!");
+      reject(ERROR_MESSAGE.FROM_ERROR + "Not support");
+    }
+    if (ERROR) {
+      return;
+    }
+    let schema =
+      {
+        type: DMS.to.type,
+        name: DMS.to.name,
+        message: fromMsgPrompt + DMS.to.message
+      };
+    self.prompt([schema], function (result) {
+      let toIndex = result[DMS.to.name];
+      checkExit(toIndex);
+      // validate
       let validate = false;
-      if (args.srcChain[1].tokenType === 'WAN') {
-        validate = ccUtil.isWanAddress(to);
-      } else if (args.srcChain[1].tokenType === 'ETH') {
-        validate = ccUtil.isEthAddress(to);
+      let toAddress;
+      if (toIndex) {
+        args.to = addressArray[toIndex];
+        //toAddress = args.to ? args.to[0] : null;
+        toAddress = args.to ? args.to[0] : toIndex;
+        if (args.srcChain[1].tokenType === 'WAN') {
+          validate = ccUtil.isWanAddress(toAddress);
+        } else if (args.srcChain[1].tokenType === 'ETH') {
+          validate = ccUtil.isEthAddress(toAddress);
+        }
+      } else {
+        validate = false;
       }
       // next
       if (!validate) {
         vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
         loadToAccountNormal(self, args, resolve, reject);
       } else {
-        resolve(to);
+        resolve(toAddress);
       }
     });
   }
@@ -1226,6 +1556,32 @@ async function main(){
       if (!validate) {
         vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
         loadAmount(self, args, resolve, reject);
+      } else {
+        resolve(amount);
+      }
+    });
+  }
+  async function loadAmountNormal(v, args, resolve, reject) {
+    let self = v;
+    self.prompt([DMS.amount], function (result) {
+      let amount = result[DMS.amount.name];
+      checkExit(amount);
+      // validate
+      let validate = false;
+      let pattern = /^\d+(\.\d{1,18})?$/;
+      if (pattern.test(amount)) {
+        validate = true;
+      }
+      if (validate) {
+        if (web3.toBigNumber(amount).gt(web3.toBigNumber(args.from[1]))) {
+          vorpal.log(ERROR_MESSAGE.LESS_AMOUNT);
+          validate = false;
+        }
+      }
+      // next
+      if (!validate) {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+        loadAmountNormal(self, args, resolve, reject);
       } else {
         resolve(amount);
       }
