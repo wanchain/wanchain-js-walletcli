@@ -1244,7 +1244,7 @@ async function main(){
     //TODO need to get decimal from chain
     let decimal = "18";
     try {
-      let txHashList = global.wanDb.filterContains(config.crossCollection,'status',['BuddyLocked','Locked','RedeemSent','RevokeSent','RedeemSending','RevokeSending']);
+      let txHashList = global.wanDb.getCollection(config.crossCollection);
       txHashList.forEach(function (value, index) {
         let  displayOrNot = true;
         let   retCheck;
