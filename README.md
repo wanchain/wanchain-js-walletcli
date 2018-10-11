@@ -62,41 +62,47 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
     ============================================================
 
     step2:
-    Select coin(ETH,BTC etc.) index, or ERC20 token(WCT,...) index
+    Select coin(ETH,BTC etc.) index, or ERC20 token(ZRX,...) index
     ============================================================
     Token Symbol                                              Token Address
     1: ETH                                                              ETH
-    2: WCT                       0xb410aa9124e5623d62cbb82b4fbe38a7230c6590
+    2: MKR                       0x54950025d1854808b09277fe082b54682b11a50b
+    3: DAI                       0xdbf193627ee704d38495c2f5eb3afc3512eafa4c
+    4: ZRX                       0x00f58d6d585f84b2d7267940cede30ce2fe6eae8
     Input the index: 1
+
 
     step3:
     Select the source account (sender account)
     ============================================================
     Sender Account(ETH)                                           ETH Balance
-    1: 0xb7e3daa87ed427381b7a35255a90ebd5c72e0414                           5
-    2: 0xdcba038e8453cf9f9360bfbce68766a56d32e25c                           5
-    3: 0x715c9588f1f4df3a91d15822b78218273e1a5128                           0
-    4: 0xf47a8bb5c9ff814d39509591281ae31c0c7c2f38        9.411211331519999998
-    Input the index or address of sender: 4
+    1: 0xb7e3daa87ed427381b7a35255a90ebd5c72e0414                  2.99912486
+    2: 0xdcba038e8453cf9f9360bfbce68766a56d32e25c                  3.99978996
+    3: 0x715c9588f1f4df3a91d15822b78218273e1a5128                           1
+    4: 0xf47a8bb5c9ff814d39509591281ae31c0c7c2f38        9.892408386519999998
+    5: 0x7cf2f6b931c863af4607cf88b0e21d5815ccba0f                           0
+    6: 0x260fb7693e4328cd33c78d83bba1ecb002c34e28                           0
+    7: 0x5e8b9dc70ba14e40fb7de0562ca411aba94ada12                           0
+    8: 0xe85b49579244b9cde82cfb3611fdf7954b64f549                           0
+    Input the index or address of sender: 1
 
     step4:
     Select storeman, you can check the Ratio of Fee
     Storeman Group Address                                                 Quota  Fee Ratio
-    1: 0x41623962c5d44565de623d53eb677e0f300467d2         326.589733350729012352       0.1%
-    2: 0xa89f7702fb9f237aad805e8f99a2793f58e81242                         0.3125       0.1%
-    3: 0xc27ecd85faa4ae80bf5e28daf91b605db7be1ba8                         0.2923       0.1%
+    1: 0x41623962c5d44565de623d53eb677e0f300467d2         312.300498782837777785       0.1%
     Input the index or address: 1
     ============================================================
 
     step5:
     Select the destination account(reciever account)
-    Reciever Account(WAN)                                         WAN Balance               WETH Balance
-    1: 0xe38d3a902ef40738f8d372c926a3d57381b67faa                           0                          0
-    2: 0x2fb19a0e51f87e5acc0389bf9c402ade423bc6f7                           0                          0
+    Receiver Account(WAN)                                         WAN Balance               WETH Balance
+    1: 0xe38d3a902ef40738f8d372c926a3d57381b67faa                  90.9747952                          0
+    2: 0x2fb19a0e51f87e5acc0389bf9c402ade423bc6f7                          30                          0
     3: 0xc80513fd31d49a6f8fa339a977edcaee9e87554d                           0                          0
     4: 0xf491746f6ad31f8e07f8b2e99a3389c28cd10943                           0                          0
-    5: 0x393e86756d8d4cf38493ce6881eb3a8f2966bb27    59014.341187945599736312                    2.32351
-    Input the index or address of reciever: 5
+    5: 0x393e86756d8d4cf38493ce6881eb3a8f2966bb27    22287.627226265599736312                    2.68251
+    6: 0x884d664e92048a30a8158d0955e52c2e4ccd3636                           0                          0
+    Input the index or address of receiver: 5
 
     step6:
     Input transfer amount, and gas price , gas limit, and password
@@ -162,10 +168,10 @@ Example 2: (Check Alice's balance)
     ============================================================
     Token Symbol
     1:ETH
-    2:WCT
-    3:WCT_One
-    4:WCT_Two
-    5:WCT_Three
+    2:MKR
+    3:DAI
+    4:ZRX
+
     Input the index: 1
     1: 0xb7e3daa87ed427381b7a35255a90ebd5c72e0414
     2: 0xdcba038e8453cf9f9360bfbce68766a56d32e25c
@@ -185,11 +191,11 @@ Example 2: (Check Alice's balance)
     ============================================================
     Token Symbol
     1:WETH
-    2:WWCT
-    3:WWCT_One
-    4:WWCT_Two
-    5:WWCT_Three
-    6:WAN
+    2:WMKR
+    3:WDAI
+    4:WZRX
+    5:WAN
+
     Input the index: 1
     1: 0xe38d3a902ef40738f8d372c926a3d57381b67faa
     2: 0x2fb19a0e51f87e5acc0389bf9c402ade423bc6f7
@@ -214,11 +220,11 @@ Example 3 (list transaction detailed info.)
     ============================================================
     Token Symbol                                              Token Address
     1: ETH                                                              ETH
-    2: WCT                       0xb410aa9124e5623d62cbb82b4fbe38a7230c6590
-    3: WCT_One                   0x7017500899433272b4088afe34c04d742d0ce7df
-    4: WCT_Two                   0xce7fb657a37afa635f60a4e2c707bb47737d511c
-    5: WCT_Three                 0x40e72d86819cef00172db2250cdb222041d12112
+    2: MKR                       0x54950025d1854808b09277fe082b54682b11a50b
+    3: DAI                       0xdbf193627ee704d38495c2f5eb3afc3512eafa4c
+    4: ZRX                       0x00f58d6d585f84b2d7267940cede30ce2fe6eae8
     Input the index: 1
+
     =====================================================================================
     Name:                                                                             ETH
     LockHash:          0x3e57e9f7347461f221963e600e150ddc507a3c11b32b96a71a4a8ecd26f4917a
@@ -239,6 +245,26 @@ Example 3 (list transaction detailed info.)
     Destination Chain:                                                                WAN
     Amount:                                                                         0.001
     Status:                                                                      Redeemed
+    =====================================================================================
+    Name:                                                                             ETH
+    LockHash:          0x8850b411dcf2b97cb39d6baed8b6490cecc3cea2001779d7bdf7361906bacfdf
+    HashX:             0x191d5288ca4dc31f864ef76f753398d2fc72f2caae4ce498809d7a10a4711e3c
+    From:                                      0xb7e3daa87ed427381b7a35255a90ebd5c72e0414
+    To:                                        0x393e86756d8d4cf38493ce6881eb3a8f2966bb27
+    Source Chain:                                                                     ETH
+    Destination Chain:                                                                WAN
+    Amount:                                                                           0.2
+    Status:                                                                      Redeemed
+    =====================================================================================
+    Name:                                                                             ETH
+    LockHash:          0xcd41954ece3c0563d66acad06488dd69e437d16b7934b10e18aa4df0cfff1b29
+    HashX:             0x62b1b7477c33e4e4113e43fa3ade9dbffbdd655a242b000b942dce2c4166d2b5
+    From:                                      0xf47a8bb5c9ff814d39509591281ae31c0c7c2f38
+    To:                                        0x393e86756d8d4cf38493ce6881eb3a8f2966bb27
+    Source Chain:                                                                     ETH
+    Destination Chain:                                                                WAN
+    Amount:                                                                          0.02
+    Status:                                                                       Revoked
 
 Example 4 (Revoke on source chain)
     After Alice lock token on source chain, she change her mind. Now ,she can revoke this
@@ -247,17 +273,41 @@ Example 4 (Revoke on source chain)
     step1:
     wallet-cli$ revoke
     =====================================================================================
+    =====================================================================================
     1:
-    Name:                                                                         WCT_One
-    LockHash:          0x93a3d71c9e7a73557f90b904d06bd5ef0817db3dd3e08643cff2a668cd01a4d6
-    HashX:             0x1ddefc15d925ad4bcc2d5a96e554f6ae92d2eceffc4a5273a3d6f04165a53418
+    Name:                                                                             ETH
+    LockHash:          0xcd41954ece3c0563d66acad06488dd69e437d16b7934b10e18aa4df0cfff1b29
+    HashX:             0x62b1b7477c33e4e4113e43fa3ade9dbffbdd655a242b000b942dce2c4166d2b5
     From:                                      0xf47a8bb5c9ff814d39509591281ae31c0c7c2f38
     To:                                        0x393e86756d8d4cf38493ce6881eb3a8f2966bb27
     Source Chain:                                                                     ETH
     Destination Chain:                                                                WAN
-    Amount:                                                                             1
+    Amount:                                                                          0.02
     Status:                                                                   BuddyLocked
-    Input index or hashX: 1
+    =====================================================================================
+    2:
+    Name:                                                                             ETH
+    LockHash:          0x884917db1c14ea8d646ec1ed82c3bd595341f568c7290dac5d30e71ff0336ecf
+    HashX:             0x03f8dcc2fcc9d9a887b3508d8b0a4816e310778f2e66c850c6adae3fd204b1dd
+    From:                                      0x393e86756d8d4cf38493ce6881eb3a8f2966bb27
+    To:                                        0xf47a8bb5c9ff814d39509591281ae31c0c7c2f38
+    Source Chain:                                                                     WAN
+    Destination Chain:                                                                ETH
+    Amount:                                                                          0.01
+    Status:                                                                   BuddyLocked
+    =====================================================================================
+    3:
+    Name:                                                                             ZRX
+    LockHash:          0xccaea544a9a6b5c85a4453547f8d501b9ff777f1b51b9bd42ea8b4c7fe4c5f47
+    HashX:             0x4b8c5d2cce2085578deca7915df37df88e8a1ccb07942758a56a525b1d976b14
+    From:                                      0xf47a8bb5c9ff814d39509591281ae31c0c7c2f38
+    To:                                        0x393e86756d8d4cf38493ce6881eb3a8f2966bb27
+    Source Chain:                                                                     ETH
+    Destination Chain:                                                                WAN
+    Amount:                                                                          0.02
+    Status:                                                                   BuddyLocked
+    =====================================================================================
+    Input index or hashX: 3
 
     step2:
     Input gas price, gas limit,and password.
