@@ -37,6 +37,7 @@ async function main(){
       let chainName;
 
       return new Promise(async function (resolve, reject) {
+        await global.crossInvoker.reInit();
         args.action = ACTION.LOCK;//['approve','lock','redeem','revoke']
         let ERROR = false;
         console.log("============================================================");
