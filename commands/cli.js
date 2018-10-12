@@ -967,7 +967,7 @@ async function main(){
           `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
           addressArray[value.address] = [value.address, tokenBalance, args.srcChain[1].tokenDecimals];
@@ -1008,7 +1008,7 @@ async function main(){
           `W${args.dstChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
           addressArray[value.address] = [value.address, tokenBalance, args.dstChain[1].tokenDecimals];
@@ -1084,7 +1084,7 @@ async function main(){
           `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
           addressArray[value.address] = [value.address, tokenBalance, args.srcChain[1].tokenDecimals];
@@ -1192,9 +1192,9 @@ async function main(){
         let indexString = (index + 1) + ': ' + value.storemenGroupAddr;
 
         if (args.srcChain[1].tokenType === 'WAN') {
-          quota = fromTokenWei(value.outboundQuota, args.from[2]);
+          quota = ccUtil.weiToToken(value.outboundQuota, args.from[2]);
         } else {
-          quota = fromTokenWei(value.inboundQuota, args.from[2]);
+          quota = ccUtil.weiToToken(value.inboundQuota, args.from[2]);
         }
         storemanMsgPrompt += sprintf("%-45s %30s %10s\r\n", indexString, quota, (Number(value.txFeeRatio)*100/10000).toString()+'%');
       });
@@ -1223,9 +1223,9 @@ async function main(){
       if (storemanAddr) {
         validate = true;
         if (args.srcChain[1].tokenType === 'WAN') {
-          args.quota = fromTokenWei(args.storeman.outboundQuota, args.from[2]);
+          args.quota = ccUtil.weiToToken(args.storeman.outboundQuota, args.from[2]);
         } else {
-          args.quota = fromTokenWei(args.storeman.inboundQuota, args.from[2]);
+          args.quota = ccUtil.weiToToken(args.storeman.inboundQuota, args.from[2]);
         }
       }
       // next
@@ -1259,6 +1259,13 @@ async function main(){
           }
         }
         if(displayOrNot){
+          let srcChainType = value.srcChainType;
+          let dstChainType = value.dstChainType;
+          if(srcChainType === 'WAN'){
+            decimal = ccUtil.getDecimalByScAddr(value.dstChainAddr,dstChainType);
+          }else{
+            decimal = ccUtil.getDecimalByScAddr(value.srcChainAddr,srcChainType);
+          }
           txHashArray[value.hashX] = value;
           txHashArray[idx] = value;
           txHashListMsgPrompt += "=====================================================================================\r\n";
@@ -1266,7 +1273,7 @@ async function main(){
             "%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n",
             idx, "Name:", value.tokenSymbol, "LockHash:", value.lockTxHash, "HashX:", value.hashX, "From:", value.from,
             "To:", value.to, "Source Chain:",value.srcChainType,  "Destination Chain:", value.dstChainType,
-            "Amount:", fromTokenWei(value.contractValue, decimal), "Status:", value.status);
+            "Amount:", ccUtil.weiToToken(value.contractValue, decimal), "Status:", value.status);
           idx++;
         }
       });
@@ -1329,7 +1336,7 @@ async function main(){
           `${args.dstChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
           addressArray[value.address] = [value.address, tokenBalance, args.dstChain[1].tokenDecimals];
@@ -1371,7 +1378,7 @@ async function main(){
           `W${args.srcChain[1].tokenSymbol} Balance`);
         wanAddressList.forEach(function (value, index) {
           let wanBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
+          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, wanBalance, tokenBalance);
           addressArray[value.address] = [value.address, tokenBalance, args.srcChain[1].tokenDecimals];
@@ -1446,7 +1453,7 @@ async function main(){
           `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = fromTokenWei(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
           addressArray[value.address] = [value.address, tokenBalance, args.dstChain[1].tokenDecimals];
@@ -1662,12 +1669,6 @@ async function main(){
       process.exit(0);
     }
   }
-  function fromTokenWei(tokenWei, decimals) {
-    return web3.toBigNumber(tokenWei).dividedBy('1e' + decimals).toString(10);
-  }
-  function toTokenWei(token, decimals) {
-    return web3.toBigNumber(token).times('1e' + decimals).toString(10);
-  }
   async function displayTokenBalance(v, args, resolve, reject){
     let ERROR         = false;
     let self          = v;
@@ -1707,7 +1708,7 @@ async function main(){
     let msgPrompt = '';
     msgPrompt     += sprintf("%-46s %26s\r\n", "Account", symbolStr);
     msgPrompt     += sprintf("%-46s %26s\r\n", accountAddr,
-      fromTokenWei(tokenBalance.toString(), symbolInfo[1].tokenDecimals));
+      ccUtil.weiToToken(tokenBalance.toString(), symbolInfo[1].tokenDecimals));
     console.log(msgPrompt);
     resolve();
   }
@@ -1728,7 +1729,7 @@ async function main(){
           "%-19s%66s\r\n%-19s%66s\r\n%-19s%66s\r\n",
           "Name:", value.tokenSymbol, "LockHash:", value.lockTxHash, "HashX:", value.hashX, "From:", value.from,
           "To:", value.to, "Source Chain:",value.srcChainType,  "Destination Chain:", value.dstChainType,
-          "Amount:", fromTokenWei(value.contractValue,decimal), "Status:", value.status);
+          "Amount:", ccUtil.weiToToken(value.contractValue,decimal), "Status:", value.status);
       });
     } catch (e) {
       reject('listTrans error. ' + e.message);
