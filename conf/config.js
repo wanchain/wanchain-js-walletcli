@@ -1,9 +1,6 @@
 const config        = {};
 config.port         = 8545;
 config.useLocalNode = false;
-//config.loglevel     = 'info';
-config.loglevel   = 'debug';
-
 const path          =require('path');
 // log config
 {
@@ -24,6 +21,7 @@ const path          =require('path');
 
 let network;
 network             = 'testnet';
+//network             = '';
 
 config.network      = network;
 

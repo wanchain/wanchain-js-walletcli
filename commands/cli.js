@@ -725,7 +725,7 @@ async function main(){
     let MsgPrompt = '';
     let srcChainArray = [];
     try {
-      let srcChainMap = global.crossInvoker.getSrcChainName();
+      let srcChainMap = await global.crossInvoker.getSrcChainName();
       MsgPrompt += sprintf("%10s\r\n", "Chain");
       let index = 0;
       for (let chainDicItem of srcChainMap) {
