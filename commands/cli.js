@@ -37,7 +37,6 @@ async function main(){
       let chainName;
 
       return new Promise(async function (resolve, reject) {
-        await global.crossInvoker.reInit();
         args.action = ACTION.LOCK;//['approve','lock','redeem','revoke']
         let ERROR = false;
         console.log("============================================================");
@@ -673,7 +672,7 @@ async function main(){
     let MsgPrompt = '';
     let srcChainArray = [];
     try {
-      let srcChainMap = global.crossInvoker.getSrcChainName();
+      let srcChainMap = await global.crossInvoker.getSrcChainName();
       MsgPrompt += sprintf("%10s\r\n", "Source Chain");
       let index = 0;
       for (let chainDicItem of srcChainMap) {
@@ -1183,7 +1182,7 @@ async function main(){
     let storemanMsgPrompt = '';
     let quota;
     try {
-      let smgList = global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
+      let smgList = await global.crossInvoker.getStoremanGroupList(args.srcChain, args.dstChain);
       console.log("============================================================");
       storemanMsgPrompt += sprintf("%-45s %30s %10s\r\n", "Storeman Group Address", "Quota", "Fee Ratio");
       smgList.forEach(function (value, index) {
