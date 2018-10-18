@@ -2018,3 +2018,6 @@ async function main(){
 }
 main();
 
+process.on('unhandledRejection', (e) => {
+    vorpal.delimiter("wallet-cli$ ").show();
+})
