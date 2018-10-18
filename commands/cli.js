@@ -1626,10 +1626,10 @@ async function main(){
           `${args.srcChain[1].tokenSymbol} Balance`);
         ethAddressList.forEach(function (value, index) {
           let ethBalance = web3.fromWei(value.balance);
-          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.dstChain[1].tokenDecimals);
+          let tokenBalance = ccUtil.weiToToken(tokenBalanceList[value.address], args.srcChain[1].tokenDecimals);
           let indexString = (index + 1) + ': ' + value.address;
           fromMsgPrompt += sprintf("%-46s %26s %26s\r\n", indexString, ethBalance, tokenBalance);
-          addressArray[value.address] = [value.address, tokenBalance, args.dstChain[1].tokenDecimals];
+          addressArray[value.address] = [value.address, tokenBalance, args.srcChain[1].tokenDecimals];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
