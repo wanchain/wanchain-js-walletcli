@@ -664,6 +664,147 @@ async function main(){
     .cancel(function () {
       vorpal.ui.cancel();
     });
+  vorpal
+    .command('approve', 'approve token to HTLC contract')
+    .action(function (args, callback) {
+      let self = this;
+      let chainName;
+
+      return new Promise(async function (resolve, reject) {
+        args.action = ACTION.APPROVE;//['approve','lock','redeem','revoke']
+        let ERROR = false;
+        console.log("============================================================");
+        let chainDicItem  = await new Promise(function (resolve, reject) {
+          loadSrcChainDic(self, args, resolve, reject);
+
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        chainName = chainDicItem[0];
+        self.tokenList = chainDicItem[1];
+        let srcChain;
+        let dstChain;
+        if(chainDicItem[0] !== 'WAN'){
+          srcChain = await new Promise(function (resolve, reject) {
+            loadTokenListApprove(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.srcChain = srcChain;
+          args.dstChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+
+        }else{
+          args.srcChain = ccUtil.getSrcChainNameByContractAddr(config.wanTokenAddress,'WAN');
+          let dstTokenList = await new Promise(function (resolve, reject) {
+            loadDstChainDic(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          self.tokenList = dstTokenList;
+          let dstChain = await new Promise(function (resolve, reject) {
+            loadTokenListApprove(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.dstChain = dstChain;
+        }
+
+        if (ERROR) {
+          return;
+        }
+
+        let from = await new Promise(function (resolve, reject) {
+          loadFromAccount(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+
+        //================== amount   ==================
+        let amount = await new Promise(function (resolve, reject) {
+          loadAmountApprove(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== gasPrice ==================
+        if (chainName === 'WAN') {
+          args.promptInfo = DMS.wanGasPrice;
+          args.minGasPrice = wanMinGasPrice;
+        } else {
+          args.promptInfo = DMS.ethGasPrice;
+          args.minGasPrice = ethMinGasPrice;
+        }
+        let gasPrice = await new Promise(function (resolve, reject) {
+          loadGasPrice(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== gasLimit ==================
+        let gasLimit = await new Promise(function (resolve, reject) {
+          loadGasLimit(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        //================== password ==================
+        let needPwd = true;
+        const input = {};
+        input.from = from;
+        input.storeman = '';
+        input.txFeeRatio = '';
+        input.to = from;        // approve, to will be changed to HTLC contract address.
+        input.amount = amount;
+        input.gasPrice = gasPrice;
+        input.gasLimit = gasLimit;
+
+        while (needPwd) {
+          let password = await new Promise(function (resolve, reject) {
+            loadPassword(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+          input.password = password;
+          ret = await global.crossInvoker.invoke(args.srcChain, args.dstChain, args.action, input);
+          if (ret.result !== wrongPwdStr) {
+            needPwd = false;
+          } else {
+            vorpal.log(ret.result);
+          }
+        }
+        vorpal.log("txHash:", ret.result);
+        callback();
+      });
+
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
+    });
   vorpal.delimiter("wallet-cli$ ").show();
 
   async function loadSrcChainDic(v, args, resolve, reject) {
@@ -879,6 +1020,59 @@ async function main(){
       }
     });
   }
+  async function loadTokenListApprove(v, args, resolve, reject) {
+    let self = v;
+    let tokenList = self.tokenList;
+    let ERROR = false;
+    let MsgPrompt = '';
+    let srcChainArray = [];
+    try {
+      console.log("============================================================");
+      MsgPrompt += sprintf("%-15s%56s\r\n", "Token Symbol","Token Address");
+      let index = 0;
+      for (let token of tokenList) {
+        if(token[1].tokenSymbol === 'WAN' || token[1].tokenSymbol === 'ETH') continue;
+        index++;
+        let keyTemp = token[0];
+        srcChainArray[index] = token;
+        srcChainArray[keyTemp] = token;
+        //let indexString = (index) + ': ' + keyTemp;
+        let indexString = (index) + ': ' + token[1].tokenSymbol;
+        MsgPrompt += sprintf("%-15s%56s\r\n", indexString, keyTemp);
+      }
+    } catch (e) {
+      ERROR = true;
+      reject(ERROR_MESSAGE.SRC_ERROR + e.message);
+    }
+    if (ERROR) {
+      return;
+    }
+    let schema =
+      {
+        type: DMS.srcChain.type,
+        name: DMS.srcChain.name,
+        message: MsgPrompt + DMS.chainToken.message
+      };
+    self.prompt([schema], function (result) {
+      let srcChainIndex = result[DMS.srcChain.name];
+      checkExit(srcChainIndex);
+      // validate
+      let validate = false;
+      let srcChain;
+      if (srcChainIndex) {
+        srcChain = srcChainArray[srcChainIndex];
+      }
+      if (srcChain) {
+        validate = true;
+      }
+      if (!validate) {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+        loadTokenListApprove(self, args, resolve, reject);
+      } else {
+        resolve(srcChain);
+      }
+    });
+  }
   async function loadAllSymbolList(v, args, resolve, reject) {
     let self        = v;
     let ERROR       = false;
@@ -944,11 +1138,7 @@ async function main(){
   async function loadFromAccount(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
-    if (args.action === ACTION.APPROVE) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED);
-      return;
-    }
+
     let fromMsgPrompt = '';
     let addressArray = {};
     if (args.srcChain[1].tokenStand === 'E20') {
@@ -1060,11 +1250,7 @@ async function main(){
   async function loadFromAccountNormal(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
-    if (args.action === ACTION.APPROVE) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED);
-      return;
-    }
+
     let fromMsgPrompt = '';
     let addressArray = {};
 
@@ -1173,11 +1359,7 @@ async function main(){
   async function loadStoremanGroups(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
-    if (args.action === ACTION.APPROVE) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED);
-      return;
-    }
+
     let smgsArray = {};
     let storemanMsgPrompt = '';
     let quota;
@@ -1313,11 +1495,7 @@ async function main(){
   async function loadToAccount(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
-    if (args.action === ACTION.APPROVE) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED);
-      return;
-    }
+
     let fromMsgPrompt = '';
     let addressArray = {};
     if (args.dstChain[1].tokenStand === 'E20') {
@@ -1430,11 +1608,7 @@ async function main(){
   async function loadToAccountNormal(v, args, resolve, reject) {
     let self = v;
     let ERROR = false;
-    if (args.action === ACTION.APPROVE) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED);
-      return;
-    }
+
     let fromMsgPrompt = '';
     let addressArray = {};
     if (args.srcChain[1].tokenStand === 'E20') {
@@ -1563,6 +1737,32 @@ async function main(){
       if (!validate) {
         vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
         loadAmount(self, args, resolve, reject);
+      } else {
+        resolve(amount);
+      }
+    });
+  }
+  async function loadAmountApprove(v, args, resolve, reject) {
+    let self = v;
+    self.prompt([DMS.amount], function (result) {
+      let amount = result[DMS.amount.name];
+      checkExit(amount);
+      // validate
+      let validate = false;
+      let pattern = /^\d+(\.\d{1,18})?$/;
+      if (pattern.test(amount)) {
+        validate = true;
+      }
+      if (validate) {
+        if (web3.toBigNumber(amount).gt(web3.toBigNumber(args.from[1]))) {
+          vorpal.log(ERROR_MESSAGE.LESS_AMOUNT);
+          validate = false;
+        }
+      }
+      // next
+      if (!validate) {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+        loadAmountApprove(self, args, resolve, reject);
       } else {
         resolve(amount);
       }
@@ -1745,11 +1945,7 @@ async function main(){
   async function loadAccount(v, args, resolve, reject) {
     let self          = v;
     let ERROR         = false;
-    if (args.action === ACTION.APPROVE) {
-      ERROR = true;
-      reject(ERROR_MESSAGE.NOT_NEED);
-      return;
-    }
+
     let addressArray  = {};
     let addressArr    = [];
     if (args.chainTypeBalance === 'ETH') {
