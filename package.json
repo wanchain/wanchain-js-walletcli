@@ -5,6 +5,7 @@
   "dependencies": {
     "keythereum": "^1.0.4",
     "moment": "^2.22.2",
+    "optimist": "^0.6.1",
     "promisefy-util": "^1.2.0",
     "sprintf-js": "^1.1.1",
     "vorpal": "^1.12.0",
@@ -22,9 +23,7 @@
   ],
   "author": "wanchain",
   "license": "MIT",
-  "devDependencies": {
-    "optimist": "^0.6.1"
-  },
+  "devDependencies": {},
   "scripts": {
     "test": "mocha --timeout 900000 tests"
   }

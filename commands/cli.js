@@ -1,3 +1,9 @@
+const       optimist        = require('optimist');
+let argv    = optimist
+  .usage('Usage: nodejs $0  [--testnet]')
+  .argv;
+global.wanchain_js_testnet = argv.testnet ? true : false;
+
 let vorpal      = require('vorpal')();
 let sprintf     = require("sprintf-js").sprintf;
 let ccUtil      = require("wanchain-js-sdk").ccUtil;
@@ -15,8 +21,10 @@ let ret         = {
 let wanMinGasPrice = 180;
 let ethMinGasPrice = 10;
 let minGasLimit = 470000;
+
 let wrongPwdStr = "Wrong password";
 let {DMS, ERROR_MESSAGE, formatStr} = require('../schema/message');
+
 let walletCore  = new WalletCore(config);
 config = walletCore.config;
 async function main(){
