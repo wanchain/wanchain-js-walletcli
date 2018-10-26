@@ -1091,7 +1091,7 @@ async function main(){
       MsgPrompt += sprintf("%-15s\r\n", "Token Symbol");
       let index = 0;
 
-      for(let item of global.crossInvoker.chainsNameMap){
+      for(let item of global.crossInvoker.tokenInfoMap){
         if(item[0] === 'BTC') continue;
         let subMap = item[1];
         for(let subItem of subMap){
