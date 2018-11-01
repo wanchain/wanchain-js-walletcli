@@ -1494,6 +1494,7 @@ async function main(){
       }
       // next
       if (!validate) {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
         loadTxHashList(self, args, resolve, reject);
       } else {
         resolve(txHashArray[txHashIndex]);
