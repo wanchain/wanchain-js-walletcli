@@ -1305,7 +1305,13 @@ async function main(){
       }
     } else if (args.srcChain[1].tokenStand === 'WAN') {
       try {
-        let wanAddressList = await ccUtil.getWanAccountsInfo();
+        let wanAddressList;
+        if(config.useLocalNode === false){
+          wanAddressList = await ccUtil.getWanAccountsInfo();
+        }else{
+          wanAddressList = await ccUtil.getWanAccountsInfoByWeb3();
+        }
+
         let addressArr = [];
         wanAddressList.forEach(function (value, index) {
           addressArr.push(value.address);
@@ -1663,7 +1669,14 @@ async function main(){
       }
     } else if (args.srcChain[1].tokenStand === 'WAN') {
       try {
-        let wanAddressList = await ccUtil.getWanAccountsInfo();
+
+        let wanAddressList;
+        if(config.useLocalNode === false){
+          wanAddressList = await ccUtil.getWanAccountsInfo();
+        }else{
+          wanAddressList = await ccUtil.getWanAccountsInfoByWeb3();
+        }
+
         let addressArr = [];
         wanAddressList.forEach(function (value, index) {
           addressArr.push(value.address);
