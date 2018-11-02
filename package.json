@@ -5,6 +5,7 @@
   "dependencies": {
     "keythereum": "^1.0.4",
     "moment": "^2.22.2",
+    "node-xlsx": "^0.12.1",
     "optimist": "^0.6.1",
     "promisefy-util": "^1.2.0",
     "sprintf-js": "^1.1.1",
