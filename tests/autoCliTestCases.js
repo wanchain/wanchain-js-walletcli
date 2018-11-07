@@ -89,8 +89,9 @@ function execProc(command) {
 
 function buildCommand(testdata) {
   let command;
-  command = './expect/' + commandDict[testdata.command];
+  command = __dirname + '/expect/' + commandDict[testdata.command];
   let testLabel = testdata.tcid + '_' + testdata.type + '_case';
+  testLabel = '"' + testLabel + ' ' + testdata.summary + '"';
   switch (testdata.command) {
     case 'approve':
       {
@@ -99,43 +100,43 @@ function buildCommand(testdata) {
       }
     case 'balance':
       {
-        command = command + ' ' + testLabel + ' ' + testnet + testdata.sourceChain + testdata.tokenSymbol + testdata.from_account;
+        command = command + ' ' + testLabel + ' ' + testnet + ' ' + testdata.sourceChain + ' ' + testdata.tokenAddr + ' ' + testdata.from_account;
         break;
       }
     case 'create':
       {
-        command = command + ' ' + testLabel + ' ' + testnet + password + testdata.sourceChain;
+        command = command + ' ' + testLabel + ' ' + testnet + ' ' + password + ' ' + testdata.sourceChain;
         break;
       }
     case 'list':
       {
-        command = command + ' ' + testLabel + ' ' + testnet + testdata.sourceChain + testdata.tokenAddr;
+        command = command + ' ' + testLabel + ' ' + testnet + ' ' + testdata.sourceChain + ' ' + testdata.tokenAddr;
         break;
       }
     case 'lock':
       {
         let storeman;
-        if (testnet.sourceChain === 'ETH') {
+        if (testdata.sourceChain === 'ETH' || testdata.sourceChain === 1) {
           storeman = testdata.source_storeman;
         } else {
           storeman = testdata.wan_storeman;
         }
-        command = command + ' ' + testLabel + ' ' + testnet + password + testdata.sourceChain + storeman + testdata.tokenAddr + testdata.from_account + testdata.to_account + testdata.amount;
+        command = command + ' ' + testLabel + ' ' + testnet + ' ' + password + ' ' + testdata.sourceChain + ' ' + storeman + ' ' + testdata.tokenAddr + ' ' + testdata.from_account + ' ' + testdata.to_account + ' ' + testdata.amount;
         break;
       }
     case 'redeem':
       {
-        command = command + ' ' + testLabel + ' ' + testnet + password + testdata.hashX;
+        command = command + ' ' + testLabel + ' ' + testnet + ' ' + password + ' ' + testdata.hashX;
         break;
       }
     case 'revoke':
       {
-        command = command + ' ' + testLabel + ' ' + testnet + password + testdata.hashX;
+        command = command + ' ' + testLabel + ' ' + testnet + ' ' + password + ' ' + testdata.hashX;
         break;
       }
     case 'transfer':
       {
-        command = command + ' ' + testLabel + ' ' + testnet + password + testdata.sourceChain + testdata.tokenAddr + testdata.from_account + testdata.to_account + testdata.amount;
+        command = command + ' ' + testLabel + ' ' + testnet + ' ' + password + ' ' + testdata.sourceChain + ' ' + testdata.tokenAddr + ' ' + testdata.from_account + ' ' + testdata.to_account + ' ' + testdata.amount;
         break;
       }
     default:
@@ -146,11 +147,12 @@ function buildCommand(testdata) {
 
 async function autoTest() {
 
-  await execProc('echo "" > ./test');
+  await execProc('echo "" > ./test_result');
   await execProc('echo "" > ./test_log');
 
   for (let i = 2; i < testData.length; i++) {
     if (testData[i].length !== 0 &&
+    	// testData[i][xlsxHeaderPos.tcId] === 'TC0085' &&
       testData[i][xlsxHeaderPos.flag] !== skipKeyword) {
       let testdata = {};
       let exec_command;
@@ -173,7 +175,9 @@ async function autoTest() {
 
       console.log(testdata);
 
-      await sleep(12 * 1000);
+      if (testdata.type === 'Sunny') {
+        await sleep(12 * 1000);
+      }
 
       try {
         exec_command = buildCommand(testdata);
@@ -187,15 +191,16 @@ async function autoTest() {
 
 
   console.log("========================")
-  await execProc('cat test | grep -e "successful" -e "failed" -e "txHash"');
+  await execProc('cat test_result | grep -e "successful" -e "failed" -e "txHash"');
   console.log("========================")
 
   console.log("========================")
   console.log("Successful case:");
-  await execProc('cat test | grep -e ^.*Sunny.*successful.*$ -e ^.*Rainy.*failed.*$ | wc -l');
+  await execProc('cat test_result | grep -e ^.*Sunny.*successful.*$ -e ^.*Rainy.*failed.*$ | wc -l');
 
   console.log("Failed case:");
-  await execProc('cat test | grep -e ^.*Sunny.*failed.*$ -e ^.*Rainy.*successful.*$ | wc -l');
+  await execProc('cat test_result | grep -e ^.*Sunny.*failed.*$ -e ^.*Rainy.*successful.*$ | wc -l');
+  await execProc('cat test_result | grep -e ^.*Sunny.*failed.*$ -e ^.*Rainy.*successful.*$');
   console.log("CLI expect——test done");
   console.log("========================");
 

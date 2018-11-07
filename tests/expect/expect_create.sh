@@ -1,6 +1,6 @@
 #!/usr/bin/expect
 
-set test_case "expect_create test case "
+set test_case "expect_create "
 # no timeout -1
 set timeout -1
 set action "create"
@@ -11,7 +11,7 @@ set testnet [lindex $argv 1]
 set passwd [lindex $argv 2]
 set sourceChain [lindex $argv 3]
 
-set fd [open ./test a]
+set fd [open ./test_result a]
 
 if {$testnet eq "true"} {
 	set test "--testnet"
@@ -19,9 +19,9 @@ if {$testnet eq "true"} {
 	set test ""
 }
 
-spawn node ../commands/cli.js $test
+spawn node commands/cli.js $test
 
-# log_file test_log
+log_file test_log
 
 expect "wallet-cli$ "
 

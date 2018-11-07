@@ -26,6 +26,6 @@
   "license": "MIT",
   "devDependencies": {},
   "scripts": {
-    "test": "mocha --timeout 900000 tests"
+    "test": "node tests/autoCliTestCases.js"
   }
 }

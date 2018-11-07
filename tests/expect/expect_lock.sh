@@ -1,6 +1,6 @@
 #!/usr/bin/expect
 
-set test_case "expect_lock test case "
+set test_case "expect_lock "
 # no timeout -1
 set timeout -1
 set action "lock"
@@ -26,7 +26,7 @@ if {$sourceChain eq "WAN"} {
 set destChain "ETH"
 set gasLimit "470000"
 
-set fd [open ./test a]
+set fd [open ./test_result a]
 
 if {$testnet eq "true"} {
 	set test "--testnet"
@@ -34,9 +34,9 @@ if {$testnet eq "true"} {
 	set test ""
 }
 
-spawn node ../commands/cli.js $test
+spawn node commands/cli.js $test
 
-# log_file test_log
+log_file test_log
 
 expect "wallet-cli$ "
 
@@ -48,7 +48,7 @@ expect {
 		}
 }
 
-if {$sourceChain eq "WAN"} {
+if {$sourceChain eq "WAN" || $sourceChain eq "2"} {
 	expect {
 		"Destination Chain" {
 			send "${destChain}\r";
@@ -87,7 +87,7 @@ expect	{
 			send "${from}\n"
 		}
 	"Please input again." {
-		puts $fd "${test_case}${direction} failed, Token Symbol: ${tokenAddr}"
+		puts $fd "${test_case}${direction} failed, Token Address: ${tokenAddr}"
 		send "exit\n"
 		exit
 	}
@@ -132,6 +132,11 @@ expect 	{
 			set gasPrice "180"
 			send "${gasPrice}\n"
 		}
+	"Balance is not enough." {
+		puts $fd "${test_case}${direction} failed, Balance is not enough. Input transaction amount: ${amount}"
+		send "exit\n"
+		exit
+	}
 	"Please input again." {
 		puts $fd "${test_case}${direction} failed, Input transaction amount: ${amount}"
 		puts $fd "$expect_out(buffer)"

@@ -1,6 +1,6 @@
 #!/usr/bin/expect
 
-set test_case "expect_transfer test case "
+set test_case "expect_transfer "
 # no timeout -1
 set timeout -1
 set action "transfer"
@@ -17,7 +17,7 @@ set amount [lindex $argv 7]
 
 set gasLimit "470000"
 
-set fd [open ./test a]
+set fd [open ./test_result a]
 
 if {$testnet eq "true"} {
 	set test "--testnet"
@@ -25,9 +25,9 @@ if {$testnet eq "true"} {
 	set test ""
 }
 
-spawn node ../commands/cli.js $test
+spawn node commands/cli.js $test
 
-# log_file test_log
+log_file test_log
 
 expect "wallet-cli$ "
 

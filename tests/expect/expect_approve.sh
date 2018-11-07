@@ -1,6 +1,6 @@
 #!/usr/bin/expect
 
-set test_case "expect_approve test case "
+set test_case "expect_approve "
 # no timeout -1
 set timeout -1
 set action "approve"
@@ -24,7 +24,7 @@ if {$sourceChain eq "WAN"} {
 set destChain "ETH"
 set gasLimit "470000"
 
-set fd [open ./test a]
+set fd [open ./test_result a]
 
 if {$testnet eq "true"} {
 	set test "--testnet"
@@ -32,9 +32,9 @@ if {$testnet eq "true"} {
 	set test ""
 }
 
-spawn node ../commands/cli.js $test
+spawn node commands/cli.js $test
 
-# log_file test_log
+log_file test_log
 
 expect "wallet-cli$ "
 
@@ -46,7 +46,7 @@ expect {
 		}
 }
 
-if {$sourceChain eq "WAN"} {
+if {$sourceChain eq "WAN" || $sourceChain eq "2"} {
 	expect {
 		"Destination Chain" {
 			send "${destChain}\r";

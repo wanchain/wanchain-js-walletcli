@@ -1,6 +1,6 @@
 #!/usr/bin/expect
 
-set test_case "expect_list test case "
+set test_case "expect_list "
 # no timeout -1
 set timeout 200
 set action "list"
@@ -11,7 +11,7 @@ set testnet [lindex $argv 1]
 set sourceChain [lindex $argv 2]
 set tokenAddr [lindex $argv 3]
 
-set fd [open ./test a]
+set fd [open ./test_result a]
 
 if {$testnet eq "true"} {
 	set test "--testnet"
@@ -28,7 +28,7 @@ if {$sourceChain eq "WAN"} {
 }
 set destChain "ETH"
 
-spawn node ../commands/cli.js $test
+spawn node commands/cli.js $test
 
 log_file test_log
 
@@ -42,7 +42,7 @@ expect {
 		}
 }
 
-if {$sourceChain eq "WAN"} {
+if {$sourceChain eq "WAN" || $sourceChain eq "2"} {
 	expect {
 		"Destination Chain" {
 			send "${destChain}\r";
