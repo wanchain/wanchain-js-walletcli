@@ -153,6 +153,7 @@ async function autoTest() {
   for (let i = 2; i < testData.length; i++) {
     if (testData[i].length !== 0 &&
     	// testData[i][xlsxHeaderPos.tcId] === 'TC0085' &&
+      // testData[i][xlsxHeaderPos.command] === 'revoke' &&
       testData[i][xlsxHeaderPos.flag] !== skipKeyword) {
       let testdata = {};
       let exec_command;
@@ -189,21 +190,25 @@ async function autoTest() {
     }
   }
 
+  try {
+    console.log("========================")
+    await execProc('cat test_result | grep -e "successful" -e "failed" -e "txHash"');
+    console.log("========================")
 
-  console.log("========================")
-  await execProc('cat test_result | grep -e "successful" -e "failed" -e "txHash"');
-  console.log("========================")
+    console.log("========================")
+    console.log("Successful case:");
+    await execProc('cat test_result | grep -e ^.*Sunny.*successful.*$ -e ^.*Rainy.*failed.*$ | wc -l');
 
-  console.log("========================")
-  console.log("Successful case:");
-  await execProc('cat test_result | grep -e ^.*Sunny.*successful.*$ -e ^.*Rainy.*failed.*$ | wc -l');
+    console.log("Failed case:");
+    await execProc('cat test_result | grep -e ^.*Sunny.*failed.*$ -e ^.*Rainy.*successful.*$ | wc -l');
 
-  console.log("Failed case:");
-  await execProc('cat test_result | grep -e ^.*Sunny.*failed.*$ -e ^.*Rainy.*successful.*$ | wc -l');
-  await execProc('cat test_result | grep -e ^.*Sunny.*failed.*$ -e ^.*Rainy.*successful.*$');
-  console.log("CLI expect——test done");
-  console.log("========================");
+    await execProc('cat test_result | grep -e ^.*Sunny.*failed.*$ -e ^.*Rainy.*successful.*$');
 
+    console.log("CLI expect——test done");
+    console.log("========================");
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 autoTest();
