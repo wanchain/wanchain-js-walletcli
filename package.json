@@ -10,7 +10,7 @@
     "promisefy-util": "^1.2.0",
     "sprintf-js": "^1.1.1",
     "vorpal": "^1.12.0",
-    "wanchain-js-sdk": "git://github.com/wanchain/wanchain-js-sdk.git#master",
+    "wanchain-js-sdk": "git://github.com/wanchain/wanchain-js-sdk.git#2.1-release",
     "wanchain-keystore": "0.0.1",
     "wanchain-util": "^1.2.0",
     "web3": "^0.20.6",
