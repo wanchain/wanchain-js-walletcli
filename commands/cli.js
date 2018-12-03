@@ -39,7 +39,7 @@ async function main(){
   DMS.ethGasPrice.message = formatStr(DMS.ethGasPrice.message, ethMinGasPrice);
   DMS.gasLimit.message = formatStr(DMS.gasLimit.message, minGasLimit);
   vorpal
-    .command('lock', 'lock token on source chain')
+    .command('lock', 'lock token on source chain.')
     .action(function (args, callback) {
       let self = this;
       let chainName;
@@ -197,7 +197,7 @@ async function main(){
       vorpal.ui.cancel();
     });
   vorpal
-    .command('redeem', 'redeem token on destination chain')
+    .command('redeem', 'redeem token on destination chain.')
     .action(function (args, callback) {
       this.action = 'redeem';
       let self = this;
@@ -278,7 +278,7 @@ async function main(){
       vorpal.ui.cancel();
     });
   vorpal
-    .command('revoke', 'revoke token on source chain')
+    .command('revoke', 'revoke token on source chain.')
     .action(function (args, callback) {
       this.action = 'revoke';
       let self = this;
@@ -359,7 +359,7 @@ async function main(){
       vorpal.ui.cancel();
     });
   vorpal
-    .command('balance', 'get balance')
+    .command('balance', 'get balance.')
     .action(function (args, callback) {
       let self = this;
       return new Promise(async function (resolve, reject) {
@@ -411,7 +411,7 @@ async function main(){
       vorpal.ui.cancel();
     });
   vorpal
-    .command('transfer', 'transfer coin or token')
+    .command('transfer', 'transfer coin or token.')
     .action(function (args, callback) {
       let self = this;
       let chainName;
@@ -543,7 +543,7 @@ async function main(){
       vorpal.ui.cancel();
     });
   vorpal
-    .command('list', 'list transaction')
+    .command('list', 'list transaction.')
     .action(function (args, callback) {
       let self = this;
       let chainName;
@@ -615,7 +615,7 @@ async function main(){
       vorpal.ui.cancel();
     });
   vorpal
-    .command('create', 'create account')
+    .command('create', 'create account.')
     .action(function(args, callback) {
       let self = this;
       return new Promise(async function(resolve, reject) {
@@ -673,7 +673,7 @@ async function main(){
       vorpal.ui.cancel();
     });
   vorpal
-    .command('approve', 'approve token to HTLC contract')
+    .command('approve', 'approve token to HTLC contract.')
     .action(function (args, callback) {
       let self = this;
       let chainName;

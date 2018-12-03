@@ -2,6 +2,7 @@ Pre-condition
 -------------
 	1) node version v8.11.3 or higher
 	2) npm  version 5.6.0 or higher
+    3) git
 
 
 How to install cli wallet?
@@ -38,8 +39,11 @@ Help
     3.  lock               lock token on source chain
     4.  redeem             redeem token on destination chain
     5.  revoke             revoke token on source chain
-    6.  balance            get balance of selected account or input account for special tokens.
-    7.  list               list detailed information of transaction
+    6.  balance            get balance
+    7.  transfer           transfer coin or token
+    8.  list               list transaction
+    9.  create             create account
+    10. approve            approve token to HTLC contract
 
 
 Examples
@@ -62,18 +66,22 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
     ============================================================
 
     step2:
-    Select coin(ETH,BTC etc.) index, or ERC20 token(ZRX,...) index
+    Select coin(ETH,BTC etc.) index, or ERC20 token(ZRX,...) index.
     ============================================================
     Token Symbol                                              Token Address
     1: ETH                                                              ETH
-    2: MKR                       0x54950025d1854808b09277fe082b54682b11a50b
-    3: DAI                       0xdbf193627ee704d38495c2f5eb3afc3512eafa4c
+    2: MKR                       0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2
+    3: DAI                       0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359
     4: ZRX                       0x00f58d6d585f84b2d7267940cede30ce2fe6eae8
+    5: AURA                      0xcdcfc0f66c522fd086a1b725ea3c0eeb9f9e8814
+    6: LRC                       0xef68e7c694f40c8202821edf525de3782458639f
+    7: LINK                      0x514910771af9ca656af840dff83e8264ecf986ca
     Input the index: 1
 
 
     step3:
-    Select the source account (sender account)
+    Make sure the keystore files of ETH that you need are all in the right place. 
+    Select the source account (sender account).
     ============================================================
     Sender Account(ETH)                                           ETH Balance
     1: 0xb7e3daa87ed427381b7a35255a90ebd5c72e0414                  2.99912486
@@ -87,14 +95,15 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
     Input the index or address of sender: 1
 
     step4:
-    Select storeman, you can check the Ratio of Fee
+    Select storeman, you can check the Ratio of Fee.
     Storeman Group Address                                                 Quota  Fee Ratio
     1: 0x41623962c5d44565de623d53eb677e0f300467d2         312.300498782837777785       0.1%
     Input the index or address: 1
     ============================================================
 
     step5:
-    Select the destination account(reciever account)
+    Make sure the keystore files of WAN that you need are all in the right place. 
+    Select the destination account(reciever account).
     Receiver Account(WAN)                                         WAN Balance               WETH Balance
     1: 0xe38d3a902ef40738f8d372c926a3d57381b67faa                  90.9747952                          0
     2: 0x2fb19a0e51f87e5acc0389bf9c402ade423bc6f7                          30                          0
@@ -105,7 +114,7 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
     Input the index or address of receiver: 5
 
     step6:
-    Input transfer amount, and gas price , gas limit, and password
+    Input transfer amount, and gas price, gas limit, and password.
 
     Input transaction amount: 0.001
     Input gas price (Recommend 10Gwei-60Gwei): 12
@@ -126,6 +135,7 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
         After lock token done, Alice should wait some minutes
 
     step8:
+    wallet-cli$ redeem
     =====================================================================================
     1:
     Name:                                                                             ETH
@@ -141,7 +151,7 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
 
     step9:
 
-    Input gas price , gas limit and password
+    Input gas price, gas limit and password.
 
     Input index or hashX: 1
     Input gas price (Recommend 180Gwin-600Gwin): 400
@@ -171,6 +181,9 @@ Example 2: (Check Alice's balance)
     2:MKR
     3:DAI
     4:ZRX
+    5:WCTODD
+    6:LRC
+    7:LINK
 
     Input the index: 1
     1: 0xb7e3daa87ed427381b7a35255a90ebd5c72e0414
@@ -194,7 +207,10 @@ Example 2: (Check Alice's balance)
     2:WMKR
     3:WDAI
     4:WZRX
-    5:WAN
+    5:WWCTODD
+    6:WLRC
+    7:WLINK
+    8:WAN
 
     Input the index: 1
     1: 0xe38d3a902ef40738f8d372c926a3d57381b67faa
@@ -205,6 +221,9 @@ Example 2: (Check Alice's balance)
     Input the index or address of account: 5
     Account                                                              WETH
     0x393e86756d8d4cf38493ce6881eb3a8f2966bb27                        2.32451
+
+    tips:
+        After redeem token done, Alice should wait some minutes
 
 Example 3 (list transaction detailed info.)
 
@@ -223,6 +242,10 @@ Example 3 (list transaction detailed info.)
     2: MKR                       0x54950025d1854808b09277fe082b54682b11a50b
     3: DAI                       0xdbf193627ee704d38495c2f5eb3afc3512eafa4c
     4: ZRX                       0x00f58d6d585f84b2d7267940cede30ce2fe6eae8
+    5: WCTODD                    0xd5cc1810197238b06f0f333b1cb2046e0c6ece9a
+    6: LRC                       0x35d957f150953a056aaf6465fd26379278324848
+    7: LINK                      0x01be23585060835e02b77ef475b0cc51aa1e0709
+
     Input the index: 1
 
     =====================================================================================
@@ -267,8 +290,8 @@ Example 3 (list transaction detailed info.)
     Status:                                                                       Revoked
 
 Example 4 (Revoke on source chain)
-    After Alice lock token on source chain, she change her mind. Now ,she can revoke this
-    transaction on source chain.
+    After Alice lock token on source chain, she changes her mind. Alice needs to wait for 
+    the Storeman timeout (HTLC), and then she can revoke this transaction on source chain.
 
     step1:
     wallet-cli$ revoke
@@ -310,7 +333,7 @@ Example 4 (Revoke on source chain)
     Input index or hashX: 3
 
     step2:
-    Input gas price, gas limit,and password.
+    Input gas price, gas limit, and password.
 
     Input gas price (Recommend 10Gwei-60Gwei): 15
     Input gas limit (Recommend 470000): 470000
