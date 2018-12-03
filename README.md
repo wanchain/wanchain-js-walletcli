@@ -150,7 +150,6 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
     Input index or hashX:1
 
     step9:
-
     Input gas price, gas limit and password.
 
     Input index or hashX: 1
@@ -168,7 +167,6 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
 Example 2: (Check Alice's balance)
 
     step1: check token amount on source chain.
-
     wallet-cli$ balance
     ============================================================
          Chain
@@ -223,9 +221,9 @@ Example 2: (Check Alice's balance)
     0x393e86756d8d4cf38493ce6881eb3a8f2966bb27                        2.32451
 
     tips:
-        After redeem token done, Alice should wait some minutes
+        After redeem token done, Alice should wait some minutes.
 
-Example 3 (list transaction detailed info.)
+Example 3 (List transaction detailed info.)
 
     steps: select source chain, and token symbol, list command can display all
     the transactions of the selected conditions.
@@ -290,6 +288,7 @@ Example 3 (list transaction detailed info.)
     Status:                                                                       Revoked
 
 Example 4 (Revoke on source chain)
+
     After Alice lock token on source chain, she changes her mind. Alice needs to wait for 
     the Storeman timeout (HTLC), and then she can revoke this transaction on source chain.
 
@@ -340,6 +339,188 @@ Example 4 (Revoke on source chain)
     Input the password: ******
      waiting...
     txHash:  0x3b72a63c02a2a806fc26fdf35661d0220f6269cc08f596d9e723ef3ec2f9db65
+
+Example 5 (Create account on source chain)
+
+    Alice wants to create a new account on source chain (ETH). She can check 
+    this amount on source chain.
+
+    step1:
+    wallet-cli$ create
+    =====================================================================================
+         Chain
+        1: ETH
+        2: WAN
+    Input the index: 1
+    Input the password: ******
+    Confirm the password: ******
+    Account: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f
+
+    step2:
+    wallet-cli$ balance
+    ============================================================
+         Chain
+        1: ETH
+        2: WAN
+    Input the index: 1
+    ============================================================
+    Token Symbol   
+    1:ETH          
+    2:MKR          
+    3:DAI          
+    4:ZRX          
+    5:WCTODD       
+    6:LRC          
+    7:LINK         
+    Input the index: 1
+    1: 0x1a3dd63f6efa425f92d1868921e3eac8df79747e  
+    2: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f  
+    Input the index or address of account: 2
+    Account                                                               ETH
+    0x71ee3fdb7f49299aeb22126f538f9bfae047928f                              0
+
+Example 6 (Transfer coin or token on source chain)
+
+    Alice wants to transfer ETH to MKR from source account to the new account
+    on source chain. Then she checks the both amounts on source chain.
+
+    step1:
+    wallet-cli$ transfer
+    ============================================================
+    Source Chain
+        1: ETH
+        2: WAN
+    Input the index: 1
+    ============================================================
+    Token Symbol                                              Token Address
+    1: ETH                                                              ETH
+    2: MKR                       0x54950025d1854808b09277fe082b54682b11a50b
+    3: DAI                       0xdbf193627ee704d38495c2f5eb3afc3512eafa4c
+    4: ZRX                       0x00f58d6d585f84b2d7267940cede30ce2fe6eae8
+    5: WCTODD                    0xd5cc1810197238b06f0f333b1cb2046e0c6ece9a
+    6: LRC                       0x35d957f150953a056aaf6465fd26379278324848
+    7: LINK                      0x01be23585060835e02b77ef475b0cc51aa1e0709
+    Input the index: 2
+    ============================================================
+    Sender Account(ETH)                                           ETH Balance                MKR Balance
+    1: 0x1a3dd63f6efa425f92d1868921e3eac8df79747e        0.048812986595555584     484.312581828223222273
+    2: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f                           0                          0
+    Input the index or address of sender: 1
+    ============================================================
+    Receiver Account(ETH)                                         ETH Balance                MKR Balance
+    1: 0x1a3dd63f6efa425f92d1868921e3eac8df79747e        0.048812986595555584     484.312581828223222273
+    2: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f                           0                          0
+    Input the index or address of receiver: 2
+    Input transaction amount: 10
+    Input gas price (Recommend 10Gwei-60Gwei): 13
+    Input gas limit (Recommend 470000): 470000
+    Input the password: ******
+     waiting... 
+    txHash: 0x4434207de0237f8693f04fc502dcaf8e5b698167abf920465f7cc10e8b1307c7
+
+    step2:
+    wallet-cli$ balance
+    ============================================================
+         Chain
+        1: ETH
+        2: WAN
+    Input the index: 1
+    ============================================================
+    Token Symbol   
+    1:ETH          
+    2:MKR          
+    3:DAI          
+    4:ZRX          
+    5:WCTODD       
+    6:LRC          
+    7:LINK         
+    Input the index: 2
+    1: 0x1a3dd63f6efa425f92d1868921e3eac8df79747e  
+    2: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f  
+    Input the index or address of account: 1
+    Account                                                               MKR
+    0x1a3dd63f6efa425f92d1868921e3eac8df79747e         474.312581828223222273
+
+    step3:
+    wallet-cli$ balance 
+    ============================================================
+         Chain
+        1: ETH
+        2: WAN
+    Input the index: 1
+    ============================================================
+    Token Symbol   
+    1:ETH          
+    2:MKR          
+    3:DAI          
+    4:ZRX          
+    5:WCTODD       
+    6:LRC          
+    7:LINK         
+    Input the index: 2
+    1: 0x1a3dd63f6efa425f92d1868921e3eac8df79747e  
+    2: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f  
+    Input the index or address of account: 2
+    Account                                                               MKR
+    0x71ee3fdb7f49299aeb22126f538f9bfae047928f                             10
+
+Example 6 (Approve token to HTLC contract on source chain)
+
+    Alice wants to prepare her MKR from source account to HTLC contract on source chain. 
+    At the same time the balance of her source account will not be reduced, this is 
+    equivalent to assigning her account authority to the HTLC contract. Then she checks 
+    the amount on source chain.
+
+    step1:
+    wallet-cli$ approve
+    ============================================================
+    Source Chain
+        1: ETH
+        2: WAN
+    Input the index: 1
+    ============================================================
+    Token Symbol                                              Token Address
+    1: MKR                       0x54950025d1854808b09277fe082b54682b11a50b
+    2: DAI                       0xdbf193627ee704d38495c2f5eb3afc3512eafa4c
+    3: ZRX                       0x00f58d6d585f84b2d7267940cede30ce2fe6eae8
+    4: WCTODD                    0xd5cc1810197238b06f0f333b1cb2046e0c6ece9a
+    5: LRC                       0x35d957f150953a056aaf6465fd26379278324848
+    6: LINK                      0x01be23585060835e02b77ef475b0cc51aa1e0709
+    Input the index: 1
+    ============================================================
+    Sender Account(ETH)                                           ETH Balance                MKR Balance
+    1: 0x1a3dd63f6efa425f92d1868921e3eac8df79747e        0.048135829595555584     474.312581828223222273
+    2: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f                           0                         10
+    Input the index or address of sender: 1
+    Input transaction amount: 4
+    Input gas price (Recommend 10Gwei-60Gwei): 12
+    Input gas limit (Recommend 470000): 470000
+    Input the password: ******
+     waiting... 
+    txHash: 0x413615edce75809fbbadbeb609b302979ef8ac813e6701c403b84787a33de3ea
+
+    step2:
+    wallet-cli$ balance
+    ============================================================
+         Chain
+        1: ETH
+        2: WAN
+    Input the index: 1
+    ============================================================
+    Token Symbol   
+    1:ETH          
+    2:MKR          
+    3:DAI          
+    4:ZRX          
+    5:WCTODD       
+    6:LRC          
+    7:LINK         
+    Input the index: 2
+    1: 0x1a3dd63f6efa425f92d1868921e3eac8df79747e  
+    2: 0x71ee3fdb7f49299aeb22126f538f9bfae047928f  
+    Input the index or address of account: 1
+    Account                                                               MKR
+    0x1a3dd63f6efa425f92d1868921e3eac8df79747e         474.312581828223222273
 
 
 
