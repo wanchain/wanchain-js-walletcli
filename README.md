@@ -527,7 +527,7 @@ Example 7 (Approve token to HTLC contract on source chain)
 Tips:
 ----
 
-    1)  Description of some status of cross transaction
+    1)  Description of some status of cross transaction.
 
     Locked:         Alice has Locked coin or token on source chain successfully.
     BuddyLocked:    Alice can Redeem her coin or token on destination chain.
