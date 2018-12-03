@@ -36,14 +36,14 @@ Help
 
     1.  help [command...]  Provides help for a given command.
     2.  exit               Exits application.
-    3.  lock               lock token on source chain
-    4.  redeem             redeem token on destination chain
-    5.  revoke             revoke token on source chain
-    6.  balance            get balance
-    7.  transfer           transfer coin or token
-    8.  list               list transaction
-    9.  create             create account
-    10. approve            approve token to HTLC contract
+    3.  lock               lock token on source chain.
+    4.  redeem             redeem token on destination chain.
+    5.  revoke             revoke token on source chain.
+    6.  balance            get balance.
+    7.  transfer           transfer coin or token.
+    8.  list               list transaction.
+    9.  create             create account.
+    10. approve            approve token to HTLC contract.
 
 
 Examples
