@@ -464,7 +464,7 @@ Example 6 (Transfer coin or token on source chain)
     Account                                                               MKR
     0x71ee3fdb7f49299aeb22126f538f9bfae047928f                             10
 
-Example 6 (Approve token to HTLC contract on source chain)
+Example 7 (Approve token to HTLC contract on source chain)
 
     Alice wants to prepare her MKR from source account to HTLC contract on source chain. 
     At the same time the balance of her source account will not be reduced, this is 
