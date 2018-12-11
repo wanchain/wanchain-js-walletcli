@@ -10,8 +10,8 @@ How to install cli wallet?
 	step1:
 		mkdir -p <workspace>
 		cd <workspace>
-		git clone https://github.com/wanchain/wanchain-js-walletcli.git
-		git clone https://github.com/wanchain/wanchain-js-sdk.git
+		git clone -b master https://github.com/wanchain/wanchain-js-walletcli.git
+		git clone -b master https://github.com/wanchain/wanchain-js-sdk.git
 
 	step2:
 		cd <workspace>/wanchain-js-walletcli
@@ -24,7 +24,7 @@ How to start cli wallet?
 		cd <workspace>/wanchain-js-walletcli
 
 	step2:
-		node commands/cli.js
+		node commands/cli.js [--testnet]
 		wallet-cli$
 
 
@@ -382,7 +382,7 @@ Example 5 (Create account on source chain)
 
 Example 6 (Transfer coin or token on source chain)
 
-    Alice wants to transfer ETH to MKR from source account to the new account
+    Alice wants to transfer ETH or MKR (/DAI/ZRX/...) from source account to the new account
     on source chain. Then she checks the both amounts on source chain.
 
     step1:
@@ -532,7 +532,7 @@ Tips:
 
     Locked:         Alice has Locked coin or token on source chain successfully.
     BuddyLocked:    Alice can Redeem her coin or token on destination chain.
-    Redeemed:       Alice has finished Redeem on destination chain.
+    Redeemed:       Alice has Redeemed on destination chain.
     Revoked:        Alice has Revoked her token or coin because she want NOT continue.
 
     2) Some states Explanation.
