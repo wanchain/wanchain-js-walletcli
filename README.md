@@ -10,8 +10,8 @@ How to install cli wallet?
 	step1:
 		mkdir -p <workspace>
 		cd <workspace>
-		git clone https://github.com/wanchain/wanchain-js-walletcli.git
-		git clone https://github.com/wanchain/wanchain-js-sdk.git
+		git clone -b 2.1-release https://github.com/wanchain/wanchain-js-walletcli.git
+		git clone -b 2.1-release https://github.com/wanchain/wanchain-js-sdk.git
 
 	step2:
 		cd <workspace>/wanchain-js-walletcli
@@ -24,7 +24,7 @@ How to start cli wallet?
 		cd <workspace>/wanchain-js-walletcli
 
 	step2:
-		node commands/cli.js
+		node commands/cli.js [--testnet]
 		wallet-cli$
 
 
