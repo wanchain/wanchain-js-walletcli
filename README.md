@@ -2,7 +2,7 @@ Pre-condition
 -------------
 	1) node version v8.11.3 or higher
 	2) npm  version 5.6.0 or higher
-    3) git
+	3) git
 
 
 How to install cli wallet?
@@ -167,6 +167,7 @@ Example 1: (Lock on ETH chain, redeem on WAN chain)
 Example 2: (Check Alice's balance)
 
     step1: check token amount on source chain.
+
     wallet-cli$ balance
     ============================================================
          Chain
