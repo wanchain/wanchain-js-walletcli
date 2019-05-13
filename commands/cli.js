@@ -7,6 +7,7 @@ global.wanchain_js_testnet = argv.testnet ? true : false;
 let vorpal      = require('vorpal')();
 let sprintf     = require("sprintf-js").sprintf;
 let ccUtil      = require("wanchain-js-sdk").ccUtil;
+let hdUitl      = require("wanchain-js-sdk").hdUitl;
 let WalletCore  = require("wanchain-js-sdk").walletCore;
 let config      = require('../conf/config');
 const Web3      = require("web3");
@@ -658,6 +659,98 @@ async function main(){
             vorpal.log("Password mismatched.");
           }
         }
+        let accountAddr;
+        if (chainType.toUpperCase() === 'WAN') {
+          accountAddr = ccUtil.createWanAddr(password);
+        } else {
+          accountAddr = ccUtil.createEthAddr(password);
+        }
+        vorpal.log("Account:", accountAddr);
+        callback();
+      });
+
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
+    });
+    vorpal
+    .command('import', 'import account.')
+    .action(function(args, callback) {
+      let self = this;
+      return new Promise(async function(resolve, reject) {
+        let ERROR = false;
+        console.log("============================================================");
+
+        let importFlag = true;
+        while (importFlag) {
+          let chainDicItem = await new Promise(function(resolve, reject) {
+            loadChainDic(self, args, resolve, reject);
+          }).catch(function(err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.chainType = chainDicItem[0];
+          if (args.chainType === 'EOS') {
+            importFlag = false;
+          } else {
+            vorpal.log("For now, only support import EOS account.");
+          }
+        }
+
+          args.privateKey = await new Promise(function(resolve, reject) {
+            loadPrivateKey(self, args, resolve, reject);
+          }).catch(function(err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+
+          args.account = await new Promise(function(resolve, reject) {
+            loadAccountFromKey(self, args, resolve, reject);
+          }).catch(function(err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+
+          let password;
+
+          let flag = true;
+          while (flag) {
+            password = await new Promise(function(resolve, reject) {
+              loadPassword(self, args, resolve, reject);
+            }).catch(function(err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+            let confirmPwd = await new Promise(function(resolve, reject) {
+              loadConfirmPwd(self, args, resolve, reject);
+            }).catch(function(err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+  
+            if (password === confirmPwd) {
+              flag = false;
+            } else {
+              vorpal.log("Password mismatched.");
+            }
+          }
+
+          let eosBip44Path = "m/44'/194'/0'/0/0"
+          hdUitl.importPrivateKey(eosBip44Path, args.privateKey, password);
+
         let accountAddr;
         if (chainType.toUpperCase() === 'WAN') {
           accountAddr = ccUtil.createWanAddr(password);
@@ -1885,6 +1978,90 @@ async function main(){
       }
     });
   }
+  async function loadPrivateKey(v, args, resolve, reject) {
+    let self = v;
+    self.prompt([DMS.privateKey], function (result) {
+      let privateKey = result[DMS.privateKey.name];
+
+      if (args.chainType === 'EOS' && ccUtil.isEosPrivateKey(privateKey)) {
+        resolve(privateKey);
+      } else {
+        vorpal.log("Incorrect private key formate.");
+        loadPrivateKey(self, args, resolve, reject);
+      }
+    });
+  }
+
+  async function loadAccountFromKey(v, args, resolve, reject) {
+    let self = v;
+    let ERROR = false;
+    let MsgPrompt = '';
+    let accountArray = [];
+
+    try {
+      let pubkey = ccUtil.getEosPubKey(args.privateKey);
+      args.pubkey = pubkey;
+      let accounts = await ccUtil.getEosAccounts(args.chainType, pubkey);
+
+      accounts = accounts.account_names;
+      if (accounts.length === 0) {
+        ERROR = true;
+        reject("No accounts found!");
+      } else {
+        MsgPrompt += sprintf("%10s\r\n", "Select Import Account");
+      }
+
+      let index = 0;
+      for (let account of accounts) {
+        index++;
+        let keyTemp = account;
+        accountArray[index] = account;
+        accountArray[keyTemp] = account;
+        let indexString = (index) + ': ' + account;
+        MsgPrompt += sprintf("%-15s \r\n", indexString);
+      }
+    } catch (e) {
+      ERROR = true;
+      reject(ERROR_MESSAGE.ACCOUNT_ERROR + e.message);
+    }
+
+    if (ERROR) {
+      return;
+    }
+    let schema =
+    {
+      type: DMS.account.type,
+      name: DMS.account.name,
+      message: msgPrompt + DMS.account.message
+    };
+    self.prompt([schema], function (result) {
+      let accountIndex = result[DMS.account.name];
+      checkExit(accountIndex);
+      if (privateKey.length === 0) {
+        loadAccountFromKey(self, args, resolve, reject);
+      } else {
+        resolve(privateKey);
+      }
+
+      let validate = false;
+      let account
+      if (accountIndex) {
+        account = addressArray[accountIndex];
+        if (args.chainType === 'EOS') {
+          validate = ccUtil.isWanAddress(account);
+        }
+      } else {
+        validate = false;
+      }
+      if (!validate) {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+        loadAccountFromKey(self, args, resolve, reject);
+      } else {
+        resolve(account);
+      }
+    });
+  }
+
   function checkExit(value) {
     if (value && value === 'exit') {
       process.exit(0);

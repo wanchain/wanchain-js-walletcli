@@ -99,7 +99,11 @@ exports.DMS = {
     name: 'password',
     message: _colorStart + 'Confirm the password: ' + _colorEnd
   },
-
+  'privateKey': {
+    type: 'privateKey',
+    name: 'privateKey',
+    message: _colorStart + 'Input the private key (wif): ' + _colorEnd
+  },
 };
 
 function formatStr(str, ...args) {
