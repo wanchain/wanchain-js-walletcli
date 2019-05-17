@@ -7,7 +7,7 @@ global.wanchain_js_testnet = argv.testnet ? true : false;
 let vorpal      = require('vorpal')();
 let sprintf     = require("sprintf-js").sprintf;
 let ccUtil      = require("wanchain-js-sdk").ccUtil;
-let hdUitl      = require("wanchain-js-sdk").hdUitl;
+let hdUtil      = require("wanchain-js-sdk").hdUtil;
 let WalletCore  = require("wanchain-js-sdk").walletCore;
 let config      = require('../conf/config');
 const Web3      = require("web3");
@@ -30,6 +30,7 @@ let walletCore  = new WalletCore(config);
 config = walletCore.config;
 async function main(){
   await walletCore.init();
+  await hdUtil.newRawKeyWallet();
   const ACTION = {
     APPROVE: 'APPROVE',
     LOCK: 'LOCK',
@@ -673,19 +674,19 @@ async function main(){
     .cancel(function () {
       vorpal.ui.cancel();
     });
-    vorpal
+  vorpal
     .command('import', 'import account.')
-    .action(function(args, callback) {
+    .action(function (args, callback) {
       let self = this;
-      return new Promise(async function(resolve, reject) {
+      return new Promise(async function (resolve, reject) {
         let ERROR = false;
         console.log("============================================================");
 
         let importFlag = true;
         while (importFlag) {
-          let chainDicItem = await new Promise(function(resolve, reject) {
+          let chainDicItem = await new Promise(function (resolve, reject) {
             loadChainDic(self, args, resolve, reject);
-          }).catch(function(err) {
+          }).catch(function (err) {
             ERROR = true;
             callback(err);
           });
@@ -698,67 +699,63 @@ async function main(){
           }
         }
 
-          args.privateKey = await new Promise(function(resolve, reject) {
-            loadPrivateKey(self, args, resolve, reject);
-          }).catch(function(err) {
-            ERROR = true;
-            callback(err);
-          });
-          if (ERROR) {
-            return;
-          }
-
-          args.account = await new Promise(function(resolve, reject) {
-            loadAccountFromKey(self, args, resolve, reject);
-          }).catch(function(err) {
-            ERROR = true;
-            callback(err);
-          });
-          if (ERROR) {
-            return;
-          }
-
-          let password;
-
-          let flag = true;
-          while (flag) {
-            password = await new Promise(function(resolve, reject) {
-              loadPassword(self, args, resolve, reject);
-            }).catch(function(err) {
-              ERROR = true;
-              callback(err);
-            });
-            if (ERROR) {
-              return;
-            }
-            let confirmPwd = await new Promise(function(resolve, reject) {
-              loadConfirmPwd(self, args, resolve, reject);
-            }).catch(function(err) {
-              ERROR = true;
-              callback(err);
-            });
-            if (ERROR) {
-              return;
-            }
-  
-            if (password === confirmPwd) {
-              flag = false;
-            } else {
-              vorpal.log("Password mismatched.");
-            }
-          }
-
-          let eosBip44Path = "m/44'/194'/0'/0/0"
-          hdUitl.importPrivateKey(eosBip44Path, args.privateKey, password);
-
-        let accountAddr;
-        if (chainType.toUpperCase() === 'WAN') {
-          accountAddr = ccUtil.createWanAddr(password);
-        } else {
-          accountAddr = ccUtil.createEthAddr(password);
+        args.privateKey = await new Promise(function (resolve, reject) {
+          loadPrivateKey(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
         }
-        vorpal.log("Account:", accountAddr);
-        callback();
+
+        args.account = await new Promise(function (resolve, reject) {
+          loadAccountFromKey(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+
+        let password;
+
+        let flag = true;
+        while (flag) {
+          password = await new Promise(function (resolve, reject) {
+            loadPassword(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          let confirmPwd = await new Promise(function (resolve, reject) {
+            loadConfirmPwd(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+
+          if (password === confirmPwd) {
+            flag = false;
+          } else {
+            vorpal.log("Password mismatched.");
+          }
+        }
+
+        try {
+          importEosAccount(args.privateKey, args.account, password);
+          vorpal.log("Import Account:", args.account);
+          callback();
+        } catch (e) {
+          callback(ERROR_MESSAGE.ACCOUNT_ERROR + e.message);
+        }
       });
 
     })
@@ -1188,7 +1185,9 @@ async function main(){
         if(item[0] === 'BTC') continue;
         let subMap = item[1];
         for(let subItem of subMap){
-          if(args.chainTypeBalance === 'ETH' && subItem[1].tokenSymbol === 'WAN') continue;
+          if (args.chainTypeBalance !== subItem[1].tokenSymbol
+            && args.chainTypeBalance !== 'WAN') continue;
+          // if(args.chainTypeBalance === 'ETH' && subItem[1].tokenSymbol === 'WAN') continue;
           index++;
           let keyTemp = item[0]+"-"+subItem[0];
           symbolsArr[index] = subItem;
@@ -2003,7 +2002,6 @@ async function main(){
       args.pubkey = pubkey;
       let accounts = await ccUtil.getEosAccounts(args.chainType, pubkey);
 
-      accounts = accounts.account_names;
       if (accounts.length === 0) {
         ERROR = true;
         reject("No accounts found!");
@@ -2024,7 +2022,6 @@ async function main(){
       ERROR = true;
       reject(ERROR_MESSAGE.ACCOUNT_ERROR + e.message);
     }
-
     if (ERROR) {
       return;
     }
@@ -2032,23 +2029,17 @@ async function main(){
     {
       type: DMS.account.type,
       name: DMS.account.name,
-      message: msgPrompt + DMS.account.message
+      message: MsgPrompt + DMS.account.message
     };
     self.prompt([schema], function (result) {
       let accountIndex = result[DMS.account.name];
       checkExit(accountIndex);
-      if (privateKey.length === 0) {
-        loadAccountFromKey(self, args, resolve, reject);
-      } else {
-        resolve(privateKey);
-      }
-
       let validate = false;
-      let account
+      let account;
       if (accountIndex) {
-        account = addressArray[accountIndex];
+        account = accountArray[accountIndex];
         if (args.chainType === 'EOS') {
-          validate = ccUtil.isWanAddress(account);
+          validate = ccUtil.isEosAccount(account);
         }
       } else {
         validate = false;
@@ -2098,6 +2089,9 @@ async function main(){
           tokenBalance = tokenBalanceList[args.accountAddr];
         }
       }
+      if(args.chainTypeBalance === symbolInfo[1].tokenSymbol){
+        tokenBalance = await ccUtil.getBalance(args.accountAddr, args.chainTypeBalance);
+      }
     }catch(e){
       ERROR = true;
       reject(ERROR_MESSAGE.BALANCE_ERROR + e.message);
@@ -2105,8 +2099,12 @@ async function main(){
     }
     let msgPrompt = '';
     msgPrompt     += sprintf("%-46s %26s\r\n", "Account", symbolStr);
-    msgPrompt     += sprintf("%-46s %26s\r\n", accountAddr,
+    if (args.chainTypeBalance === 'EOS') {
+      msgPrompt     += sprintf("%-46s %26s\r\n", accountAddr, tokenBalance.toString());
+    } else {
+      msgPrompt     += sprintf("%-46s %26s\r\n", accountAddr,
       ccUtil.weiToToken(tokenBalance.toString(), symbolInfo[1].tokenDecimals));
+    }
     console.log(msgPrompt);
     resolve();
   }
@@ -2167,6 +2165,19 @@ async function main(){
         ERROR = true;
         reject(ERROR_MESSAGE.ACCOUNT_ERROR + e.message);
       }
+    } else if (args.chainTypeBalance === 'EOS') {
+      try {
+        let eosChainID = 194;
+        let eosAccountList = await hdUtil.getUserAccountForChain(eosChainID).accounts;
+        for ( var eosPath in eosAccountList ) {
+          for ( var wid in eosAccountList[eosPath]) {
+            addressArr.push(eosAccountList[eosPath][wid].account);
+          }
+        }
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.ACCOUNT_ERROR + e.message);
+      }
     }else {
       ERROR = true;
       console.log("No support BTC in this version!");
@@ -2201,6 +2212,8 @@ async function main(){
           validate = ccUtil.isWanAddress(fromAddress);
         } else if (args.chainTypeBalance === 'ETH') {
           validate = ccUtil.isEthAddress(fromAddress);
+        } else if (args.chainTypeBalance === 'EOS') {
+          validate = ccUtil.isEosAccount(fromAddress);
         }
       } else {
         validate = false;
@@ -2214,6 +2227,18 @@ async function main(){
       }
     });
   }
+}
+
+function importEosAccount(privateKey, account, password) {
+  let eosChainID = 194;
+  let eosBip44PathForm = "m/44'/194'/0'/0/";
+  let eosWalletID = 6;
+
+  let index = hdUtil.getRawKeyCount(eosChainID) + 1;
+  let path = eosBip44PathForm + index;
+
+  hdUtil.importPrivateKey(path, privateKey, password);
+  hdUtil.createUserAccount(eosWalletID, path, {"account" : account});
 }
 main();
 
