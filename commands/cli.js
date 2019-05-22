@@ -133,32 +133,34 @@ async function main(){
         if (ERROR) {
           return;
         }
-        //================== gasPrice ==================
-        if (chainName === 'WAN') {
-          args.promptInfo = DMS.wanGasPrice;
-          args.minGasPrice = wanMinGasPrice;
-        } else {
-          args.promptInfo = DMS.ethGasPrice;
-          args.minGasPrice = ethMinGasPrice;
-        }
-        let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        //================== gasLimit ==================
-        let gasLimit = await new Promise(function (resolve, reject) {
-          loadGasLimit(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
+        if (chainName !== 'EOS') {
+          //================== gasPrice ==================
+          if (chainName === 'WAN') {
+            args.promptInfo = DMS.wanGasPrice;
+            args.minGasPrice = wanMinGasPrice;
+          } else {
+            args.promptInfo = DMS.ethGasPrice;
+            args.minGasPrice = ethMinGasPrice;
+          }
+          let gasPrice = await new Promise(function (resolve, reject) {
+            loadGasPrice(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          //================== gasLimit ==================
+          let gasLimit = await new Promise(function (resolve, reject) {
+            loadGasLimit(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
         }
         //================== password ==================
         let needPwd = true;
@@ -168,8 +170,10 @@ async function main(){
         input.txFeeRatio = storeman.txFeeRatio;
         input.to = to;
         input.amount = amount;
-        input.gasPrice = gasPrice;
-        input.gasLimit = gasLimit;
+        if (chainName !== 'EOS') {
+          input.gasPrice = gasPrice;
+          input.gasLimit = gasLimit;
+        }
 
         while (needPwd) {
           let password = await new Promise(function (resolve, reject) {
@@ -225,32 +229,36 @@ async function main(){
           args.promptInfo = DMS.ethGasPrice;
           args.minGasPrice = ethMinGasPrice;
         }
-        let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        //================== gasLimit ==================
-        let gasLimit = await new Promise(function (resolve, reject) {
-          loadGasLimit(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
+        if (tx.dstChainType.toUpperCase() !== 'EOS') {
+          let gasPrice = await new Promise(function (resolve, reject) {
+            loadGasPrice(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          //================== gasLimit ==================
+          let gasLimit = await new Promise(function (resolve, reject) {
+            loadGasLimit(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
         }
         //================== password ==================
         let dstChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.dstChainAddr,tx.dstChainType);
         const input = {};
         input.x = tx.x;
         input.hashX = tx.hashX;
-        input.gasPrice = gasPrice;
-        input.gasLimit = gasLimit;
+        if (tx.dstChainType.toUpperCase() !== 'EOS') {
+          input.gasPrice = gasPrice;
+          input.gasLimit = gasLimit;
+        }
         let needPwd = true;
         while (needPwd) {
           let password = await new Promise(function (resolve, reject) {
@@ -298,32 +306,34 @@ async function main(){
         if (ERROR) {
           return;
         }
-        //================== gasPrice ==================
-        if (tx.srcChainType.toUpperCase() === 'WAN') {
-          args.promptInfo = DMS.wanGasPrice;
-          args.minGasPrice = wanMinGasPrice;
-        } else {
-          args.promptInfo = DMS.ethGasPrice;
-          args.minGasPrice = ethMinGasPrice;
-        }
-        let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        //================== gasLimit ==================
-        let gasLimit = await new Promise(function (resolve, reject) {
-          loadGasLimit(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
+        if (tx.srcChainType.toUpperCase() !== 'EOS') {
+          //================== gasPrice ==================
+          if (tx.srcChainType.toUpperCase() === 'WAN') {
+            args.promptInfo = DMS.wanGasPrice;
+            args.minGasPrice = wanMinGasPrice;
+          } else {
+            args.promptInfo = DMS.ethGasPrice;
+            args.minGasPrice = ethMinGasPrice;
+          }
+          let gasPrice = await new Promise(function (resolve, reject) {
+            loadGasPrice(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          //================== gasLimit ==================
+          let gasLimit = await new Promise(function (resolve, reject) {
+            loadGasLimit(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
         }
         //================== password ==================
         let srcChain = global.crossInvoker.getSrcChainNameByContractAddr(tx.srcChainAddr,tx.srcChainType);
@@ -331,8 +341,10 @@ async function main(){
         const input = {};
         input.x = tx.x;
         input.hashX = tx.hashX;
-        input.gasPrice = gasPrice;
-        input.gasLimit = gasLimit;
+        if (tx.srcChainType.toUpperCase() !== 'EOS') {
+          input.gasPrice = gasPrice;
+          input.gasLimit = gasLimit;
+        }
         let needPwd = true;
         while (needPwd) {
           let password = await new Promise(function (resolve, reject) {
@@ -480,32 +492,34 @@ async function main(){
         if (ERROR) {
           return;
         }
-        //================== gasPrice ==================
-        if (chainName === 'WAN') {
-          args.promptInfo = DMS.wanGasPrice;
-          args.minGasPrice = wanMinGasPrice;
-        } else {
-          args.promptInfo = DMS.ethGasPrice;
-          args.minGasPrice = ethMinGasPrice;
-        }
-        let gasPrice = await new Promise(function (resolve, reject) {
-          loadGasPrice(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
-        }
-        //================== gasLimit ==================
-        let gasLimit = await new Promise(function (resolve, reject) {
-          loadGasLimit(self, args, resolve, reject);
-        }).catch(function (err) {
-          ERROR = true;
-          callback(err);
-        });
-        if (ERROR) {
-          return;
+        if (chainName !== 'EOS') {
+          //================== gasPrice ==================
+          if (chainName === 'WAN') {
+            args.promptInfo = DMS.wanGasPrice;
+            args.minGasPrice = wanMinGasPrice;
+          } else {
+            args.promptInfo = DMS.ethGasPrice;
+            args.minGasPrice = ethMinGasPrice;
+          }
+          let gasPrice = await new Promise(function (resolve, reject) {
+            loadGasPrice(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          //================== gasLimit ==================
+          let gasLimit = await new Promise(function (resolve, reject) {
+            loadGasLimit(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
         }
         //================== password ==================
         let needPwd         = true;
@@ -513,8 +527,13 @@ async function main(){
         input.from          = from;
         input.to            = to;
         input.amount        = amount;
-        input.gasPrice      = gasPrice;
-        input.gasLimit      = gasLimit;
+        if (chainName !== 'EOS' ) {
+          input.gasPrice      = gasPrice;
+          input.gasLimit      = gasLimit;
+        } else {
+          input.BIP44Path = args.BIP44Path;
+          input.walletID = args.walletID;
+        }
 
         while (needPwd) {
           let password = await new Promise(function (resolve, reject) {
@@ -750,7 +769,7 @@ async function main(){
         }
 
         try {
-          importEosAccount(args.privateKey, args.account, password);
+          ccUtil.importEosAccount(args.privateKey, args.account, password);
           vorpal.log("Import Account:", args.account);
           callback();
         } catch (e) {
@@ -1307,6 +1326,25 @@ async function main(){
         ERROR = true;
         reject(ERROR_MESSAGE.FROM_ERROR + e.message);
       }
+    } else if (args.srcChain[1].tokenStand === 'EOS') {
+      try {
+        let eosAddressList = await ccUtil.getEosAccountsInfo();
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        eosAddressList.forEach(function (value, index) {
+          let eosBalance = value.balance;
+          let ramAvailable = value.ramAvailable;
+          let netAvailable = value.netAvailable;
+          let cpuAvailable = value.cpuAvailable;
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
     } else {
       ERROR = true;
       console.log("No support BTC in this version!");
@@ -1330,10 +1368,16 @@ async function main(){
       if (fromIndex) {
         args.from = addressArray[fromIndex];
         fromAddress = args.from ? args.from[0] : null;
-        if (args.srcChain[1].tokenType === 'WAN') {
-          validate = ccUtil.isWanAddress(fromAddress);
-        } else if (args.srcChain[1].tokenType === 'ETH') {
-          validate = ccUtil.isEthAddress(fromAddress);
+        if (fromAddress) {
+          if (args.srcChain[1].tokenType === 'WAN') {
+            validate = ccUtil.isWanAddress(fromAddress);
+          } else if (args.srcChain[1].tokenType === 'ETH') {
+            validate = ccUtil.isEthAddress(fromAddress);
+          } else if (args.srcChain[1].tokenType === 'EOS') {
+            validate = ccUtil.isEosAccount(fromAddress);
+            args.BIP44Path = args.from[3];
+            args.walletID = args.from[4];
+          }
         }
       } else {
         validate = false;
@@ -1421,6 +1465,25 @@ async function main(){
         ERROR = true;
         reject(ERROR_MESSAGE.FROM_ERROR + e.message);
       }
+    } else if (args.srcChain[1].tokenStand === 'EOS') {
+      try {
+        let eosAddressList = await ccUtil.getEosAccountsInfo();
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        eosAddressList.forEach(function (value, index) {
+          let eosBalance = value.balance;
+          let ramAvailable = value.ramAvailable;
+          let netAvailable = value.netAvailable;
+          let cpuAvailable = value.cpuAvailable;
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
     } else {
       ERROR = true;
       console.log("No support BTC in this version!");
@@ -1444,10 +1507,16 @@ async function main(){
       if (fromIndex) {
         args.from = addressArray[fromIndex];
         fromAddress = args.from ? args.from[0] : null;
-        if (args.srcChain[1].tokenType === 'WAN') {
-          validate = ccUtil.isWanAddress(fromAddress);
-        } else if (args.srcChain[1].tokenType === 'ETH') {
-          validate = ccUtil.isEthAddress(fromAddress);
+        if (fromAddress) {
+          if (args.srcChain[1].tokenType === 'WAN') {
+            validate = ccUtil.isWanAddress(fromAddress);
+          } else if (args.srcChain[1].tokenType === 'ETH') {
+            validate = ccUtil.isEthAddress(fromAddress);
+          } else if (args.srcChain[1].tokenType === 'EOS') {
+            validate = ccUtil.isEosAccount(fromAddress);
+            args.BIP44Path = args.from[3];
+            args.walletID = args.from[4];
+          }
         }
       } else {
         validate = false;
@@ -1672,6 +1741,25 @@ async function main(){
         ERROR = true;
         reject(ERROR_MESSAGE.FROM_ERROR + e.message);
       }
+    } else if (args.dstChain[1].tokenStand === 'EOS') {
+      try {
+        let eosAddressList = await ccUtil.getEosAccountsInfo();
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        eosAddressList.forEach(function (value, index) {
+          let eosBalance = value.balance;
+          let ramAvailable = value.ramAvailable;
+          let netAvailable = value.netAvailable;
+          let cpuAvailable = value.cpuAvailable;
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
     } else {
       ERROR = true;
       console.log("No support BTC in this version!");
@@ -1699,6 +1787,8 @@ async function main(){
           validate = ccUtil.isWanAddress(toAddress);
         } else if (args.dstChain[1].tokenType === 'ETH') {
           validate = ccUtil.isEthAddress(toAddress);
+        } else if (args.srcChain[1].tokenType === 'EOS') {
+          validate = ccUtil.isEosAccount(toAddress);
         }
       } else {
         validate = false;
@@ -1786,6 +1876,25 @@ async function main(){
         ERROR = true;
         reject(ERROR_MESSAGE.FROM_ERROR + e.message);
       }
+    } else if (args.srcChain[1].tokenStand === 'EOS') {
+      try {
+        let eosAddressList = await ccUtil.getEosAccountsInfo();
+        console.log("============================================================");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        eosAddressList.forEach(function (value, index) {
+          let eosBalance = value.balance;
+          let ramAvailable = value.ramAvailable;
+          let netAvailable = value.netAvailable;
+          let cpuAvailable = value.cpuAvailable;
+          let indexString = (index + 1) + ': ' + value.address;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          addressArray[index + 1] = addressArray[value.address];
+        });
+      } catch (e) {
+        ERROR = true;
+        reject(ERROR_MESSAGE.FROM_ERROR + e.message);
+      }
     } else {
       ERROR = true;
       console.log("No support BTC in this version!");
@@ -1814,6 +1923,8 @@ async function main(){
           validate = ccUtil.isWanAddress(toAddress);
         } else if (args.srcChain[1].tokenType === 'ETH') {
           validate = ccUtil.isEthAddress(toAddress);
+        } else if (args.srcChain[1].tokenType === 'EOS') {
+          validate = ccUtil.isEosAccount(toAddress);
         }
       } else {
         validate = false;
@@ -1890,6 +2001,9 @@ async function main(){
       // validate
       let validate = false;
       let pattern = /^\d+(\.\d{1,18})?$/;
+      if (args.srcChain[0] === 'EOS') {
+        pattern = /^\d+(\.\d{1,4})?$/;
+      }
       if (pattern.test(amount)) {
         validate = true;
       }
@@ -2000,7 +2114,7 @@ async function main(){
     try {
       let pubkey = ccUtil.getEosPubKey(args.privateKey);
       args.pubkey = pubkey;
-      let accounts = await ccUtil.getEosAccounts(args.chainType, pubkey);
+      let accounts = await ccUtil.getEosAccountsByPubkey(args.chainType, pubkey);
 
       if (accounts.length === 0) {
         ERROR = true;
@@ -2167,11 +2281,12 @@ async function main(){
       }
     } else if (args.chainTypeBalance === 'EOS') {
       try {
-        let eosChainID = 194;
-        let eosAccountList = await hdUtil.getUserAccountForChain(eosChainID).accounts;
+        let eosAccountList = await ccUtil.getEosAccounts();
         for ( var eosPath in eosAccountList ) {
-          for ( var wid in eosAccountList[eosPath]) {
-            addressArr.push(eosAccountList[eosPath][wid].account);
+          for ( var walletID in eosAccountList[eosPath]) {
+            addressArr.push(eosAccountList[eosPath][walletID].account);
+            args.accountPath = eosPath;
+            args.walletID = walletID;
           }
         }
       } catch (e) {
@@ -2229,17 +2344,6 @@ async function main(){
   }
 }
 
-function importEosAccount(privateKey, account, password) {
-  let eosChainID = 194;
-  let eosBip44PathForm = "m/44'/194'/0'/0/";
-  let eosWalletID = 6;
-
-  let index = hdUtil.getRawKeyCount(eosChainID) + 1;
-  let path = eosBip44PathForm + index;
-
-  hdUtil.importPrivateKey(path, privateKey, password);
-  hdUtil.createUserAccount(eosWalletID, path, {"account" : account});
-}
 main();
 
 process.on('unhandledRejection', (e) => {
