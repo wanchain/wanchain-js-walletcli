@@ -650,21 +650,13 @@ async function main(){
         });
 
         let chainType = chainDicItem[0];
+        args.chainType = chainType;
         let password;
 
-        let flag = true;
-        while (flag) {
-          password = await new Promise(function(resolve, reject) {
-            loadPassword(self, args, resolve, reject);
-          }).catch(function(err) {
-            ERROR = true;
-            callback(err);
-          });
-          if (ERROR) {
-            return;
-          }
-          let confirmPwd = await new Promise(function(resolve, reject) {
-            loadConfirmPwd(self, args, resolve, reject);
+        if (chainType.toUpperCase() === 'EOS') {
+          // vorpal.log("For now, EOS only support create keys.");
+          let cmd = await new Promise(function(resolve, reject) {
+            loadCommand(self, ['createKeys', 'newaccount'], resolve, reject);
           }).catch(function(err) {
             ERROR = true;
             callback(err);
@@ -673,20 +665,140 @@ async function main(){
             return;
           }
 
-          if (password === confirmPwd) {
-            flag = false;
-          } else {
-            vorpal.log("Password mismatched.");
+          if (cmd === 'createKeys') {
+            let privKey = await ccUtil.createEosKey();
+            let pubKey = ccUtil.getEosPubKey(privKey);
+            let keyPrompt = sprintf("%-12s%56s\r\n", "Public Key: ",pubKey);
+            keyPrompt += sprintf("%-12s%53s\r\n", "Private key: ",privKey);
+            console.log(keyPrompt);
+            callback();
           }
-        }
-        let accountAddr;
-        if (chainType.toUpperCase() === 'WAN') {
-          accountAddr = ccUtil.createWanAddr(password);
+
+          if (cmd === 'newaccount') {
+            args.srcChain = chainDicItem[1].entries().next().value;
+
+            vorpal.log("Please choose the creator account which be used to create new account.");
+            let from = await new Promise(function (resolve, reject) {
+              loadFromAccountNormal(self, args, resolve, reject);
+            }).catch(function (err) {
+              ERROR = true;
+              callback(err);
+            });
+
+            if (ERROR) {
+              return;
+            }
+
+            vorpal.log("Input the account name.");
+            vorpal.log("account name must be less than 13 characters, can only contain the following symbols: .12345abcdefghijklmnopqrstuvwxyz.");
+            let accountName = await new Promise(function (resolve, reject) {
+              loadAccountName(self, args, resolve, reject);
+            }).catch(function (err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+
+            vorpal.log("Input the owner Key: Public key which will own the account.");
+            let ownerPublicKey = await new Promise(function (resolve, reject) {
+              loadPublicKey(self, args, resolve, reject);
+            }).catch(function (err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+
+            vorpal.log("Input the active Key: Public key for most transactions, can be same as owner.");
+            let activePublicKey = await new Promise(function (resolve, reject) {
+              loadPublicKey(self, args, resolve, reject);
+            }).catch(function (err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+
+            //================== password ==================
+            let needPwd         = true;
+            const input         = {};
+            input.from          = from;
+            input.BIP44Path = args.BIP44Path;
+            input.walletID = args.walletID;
+            input.action = cmd;
+            input.accountName = accountName;
+            input.ownerPublicKey = ownerPublicKey;
+            input.activePublicKey = activePublicKey;
+
+            while (needPwd) {
+              vorpal.log("Input the creator password.");
+              password = await new Promise(function (resolve, reject) {
+                loadPassword(self, args, resolve, reject);
+              }).catch(function (err) {
+                ERROR = true;
+                callback(err);
+              });
+              if (ERROR) {
+                return;
+              }
+              vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+              input.password = password;
+              ret = await global.crossInvoker.invokeNormalTrans(args.srcChain,input);
+              if (ret.result !== wrongPwdStr) {
+                needPwd = false;
+              } else {
+                vorpal.log(ret.result);
+              }
+            }
+            if (ret.result.code && ret.result.code === 500) {
+              vorpal.log("Error:", ret.result.error);
+            } else {
+              vorpal.log("result:", ret.result);
+            }
+
+            callback();
+          }
         } else {
-          accountAddr = ccUtil.createEthAddr(password);
+          let flag = true;
+          while (flag) {
+            password = await new Promise(function(resolve, reject) {
+              loadPassword(self, args, resolve, reject);
+            }).catch(function(err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+            let confirmPwd = await new Promise(function(resolve, reject) {
+              loadConfirmPwd(self, args, resolve, reject);
+            }).catch(function(err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+
+            if (password === confirmPwd) {
+              flag = false;
+            } else {
+              vorpal.log("Password mismatched.");
+            }
+          }
+          let accountAddr;
+          if (chainType.toUpperCase() === 'WAN') {
+            accountAddr = ccUtil.createWanAddr(password);
+          } else {
+            accountAddr = ccUtil.createEthAddr(password);
+          }
+          vorpal.log("Account:", accountAddr);
+          callback();
         }
-        vorpal.log("Account:", accountAddr);
-        callback();
       });
 
     })
@@ -777,6 +889,147 @@ async function main(){
         }
       });
 
+    })
+    .cancel(function () {
+      vorpal.ui.cancel();
+    });
+  vorpal
+    .command('action', 'chain action.')
+    .action(function (args, callback) {
+      let self = this;
+      return new Promise(async function (resolve, reject) {
+        let ERROR = false;
+        let actionFlag = true;
+        while (actionFlag) {
+          let chainDicItem = await new Promise(function (resolve, reject) {
+            loadChainDic(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+
+          args.chainType = chainDicItem[0];
+          args.srcChain = chainDicItem[1].entries().next().value;
+
+          if (args.chainType === 'EOS') {
+            actionFlag = false;
+          } else {
+            vorpal.log("For now, only support import EOS action.");
+          }
+          if (ERROR) {
+            return;
+          }
+        }
+
+        let cmd = await new Promise(function(resolve, reject) {
+          loadCommand(self, ['buyrambytes', 'delegatebw'], resolve, reject);
+        }).catch(function(err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+
+        let from = await new Promise(function (resolve, reject) {
+          loadFromAccountNormal(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+        let to = await new Promise(function (resolve, reject) {
+          loadToAccountNormal(self, args, resolve, reject);
+        }).catch(function (err) {
+          ERROR = true;
+          callback(err);
+        });
+        if (ERROR) {
+          return;
+        }
+
+        const input = {};
+        input.from = from;
+        input.to = to;
+        input.BIP44Path = args.BIP44Path;
+        input.walletID = args.walletID;
+        input.action = cmd;
+
+        if (cmd === 'buyrambytes') {
+          vorpal.log("RAM amount (KB)");
+          let ramBytes = await new Promise(function (resolve, reject) {
+            loadResourceAmount(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+
+          input.ramBytes = ramBytes;
+        }
+
+        if (cmd === 'delegatebw') {
+          vorpal.log("Delegated Resource NET (EOS):");
+          let netAmount = await new Promise(function (resolve, reject) {
+            loadResourceAmount(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+
+          vorpal.log("Delegated Resource CPU (EOS):");
+          let cpuAmount = await new Promise(function (resolve, reject) {
+            loadResourceAmount(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+
+          input.netAmount = netAmount;
+          input.cpuAmount = cpuAmount;
+        }
+
+        //================== password ==================
+        let password;
+        let needPwd = true;
+
+        while (needPwd) {
+          vorpal.log("Input the payer password.");
+          password = await new Promise(function (resolve, reject) {
+            loadPassword(self, args, resolve, reject);
+          }).catch(function (err) {
+            ERROR = true;
+            callback(err);
+          });
+          if (ERROR) {
+            return;
+          }
+          vorpal.log(config.consoleColor.COLOR_FgGreen, 'waiting...', '\x1b[0m');
+          input.password = password;
+          ret = await global.crossInvoker.invokeNormalTrans(args.srcChain,input);
+          if (ret.result !== wrongPwdStr) {
+            needPwd = false;
+          } else {
+            vorpal.log(ret.result);
+          }
+        }
+        if (ret.result.code && ret.result.code === 500) {
+          vorpal.log("Error:", ret.result.error);
+        } else {
+          vorpal.log("result:", ret.result);
+        }
+        callback();
+      });
     })
     .cancel(function () {
       vorpal.ui.cancel();
@@ -1329,16 +1582,17 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
+        let tokenDecimals = args.srcChain[1].tokenDecimals;
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -1468,16 +1722,17 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
+        let tokenDecimals = args.srcChain[1].tokenDecimals;
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -1744,16 +1999,17 @@ async function main(){
     } else if (args.dstChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
+        let tokenDecimals = args.srcChain[1].tokenDecimals;
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -1879,16 +2135,17 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
+        let tokenDecimals = args.srcChain[1].tokenDecimals;
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net", "Valid CPU");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %12s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, "18", value.BIP44Path, value.walletID];
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -2022,6 +2279,29 @@ async function main(){
       }
     });
   }
+  async function loadResourceAmount(v, args, resolve, reject) {
+    let self = v;
+    self.prompt([DMS.amount], function (result) {
+      let amount = result[DMS.amount.name];
+      checkExit(amount);
+      // validate
+      let validate = false;
+      let pattern = /^\d+(\.\d{1,18})?$/;
+      if (args.srcChain[0] === 'EOS') {
+        pattern = /^\d+(\.\d{1,4})?$/;
+      }
+      if (pattern.test(amount)) {
+        validate = true;
+      }
+      // next
+      if (!validate) {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+        loadAmountNormal(self, args, resolve, reject);
+      } else {
+        resolve(amount);
+      }
+    });
+  }
   async function loadGasPrice(v, args, resolve, reject) {
     let self = v;
     self.prompt([args.promptInfo], function (result) {
@@ -2074,6 +2354,7 @@ async function main(){
     let self = v;
     self.prompt([DMS.password], function (result) {
       let password = result[DMS.password.name];
+      checkExit(password);
       if (password.length === 0) {
         loadPassword(self, args, resolve, reject);
       } else {
@@ -2084,6 +2365,7 @@ async function main(){
   async function loadConfirmPwd(v, args, resolve, reject) {
     v.prompt([DMS.confirmPwd], function (result) {
       let password = result[DMS.confirmPwd.name];
+      checkExit(password);
       if (password.length === 0) {
         loadConfirmPwd(v, args, resolve, reject);
       } else {
@@ -2091,11 +2373,40 @@ async function main(){
       }
     });
   }
+
+  async function loadAccountName(v, args, resolve, reject) {
+    let self = v;
+    self.prompt([DMS.account], function (result) {
+      let accountName = result[DMS.account.name];
+      checkExit(accountName);
+      if (args.chainType === 'EOS' && ccUtil.isEosAccount(accountName)) {
+        resolve(accountName);
+      } else {
+        vorpal.log("Incorrect account formate.");
+        loadAccountName(self, args, resolve, reject);
+      }
+    });
+  }
+
+  async function loadPublicKey(v, args, resolve, reject) {
+    let self = v;
+    self.prompt([DMS.publicKey], function (result) {
+      let publicKey = result[DMS.publicKey.name];
+      checkExit(publicKey);
+      if (args.chainType === 'EOS' && ccUtil.isEosPublicKey(publicKey)) {
+        resolve(publicKey);
+      } else {
+        vorpal.log("Incorrect public key formate.");
+        loadPublicKey(self, args, resolve, reject);
+      }
+    });
+  }
+
   async function loadPrivateKey(v, args, resolve, reject) {
     let self = v;
     self.prompt([DMS.privateKey], function (result) {
       let privateKey = result[DMS.privateKey.name];
-
+      checkExit(privateKey);
       if (args.chainType === 'EOS' && ccUtil.isEosPrivateKey(privateKey)) {
         resolve(privateKey);
       } else {
@@ -2180,6 +2491,7 @@ async function main(){
     let symbolStr     = args.symbolInfoBalance[1].tokenSymbol;
 
     let tokenBalance;
+    let accountInfo;
     try{
       if(args.chainTypeBalance === 'ETH'){
         if(symbolInfo[1].tokenSymbol === 'ETH'){
@@ -2203,19 +2515,41 @@ async function main(){
           tokenBalance = tokenBalanceList[args.accountAddr];
         }
       }
-      if(args.chainTypeBalance === symbolInfo[1].tokenSymbol){
-        tokenBalance = await ccUtil.getBalance(args.accountAddr, args.chainTypeBalance);
+      if(args.chainTypeBalance === 'EOS'){
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr([args.accountAddr],
+          'eosio.token',
+          args.chainTypeBalance,
+          symbolInfo[1].tokenSymbol);
+        tokenBalance = tokenBalanceList[args.accountAddr];
+
+        accountInfo = await ccUtil.getEosAccountInfo(args.accountAddr);
+      } else {
+        if(args.chainTypeBalance === symbolInfo[1].tokenSymbol){
+          tokenBalance = await ccUtil.getBalance(args.accountAddr, args.chainTypeBalance);
+        }
       }
     }catch(e){
       ERROR = true;
-      reject(ERROR_MESSAGE.BALANCE_ERROR + e.message);
+      reject(ERROR_MESSAGE.BALANCE_ERROR + ((e.hasOwnProperty("message")) ? e.message : e));
       return;
     }
     let msgPrompt = '';
-    msgPrompt     += sprintf("%-46s %26s\r\n", "Account", symbolStr);
+
     if (args.chainTypeBalance === 'EOS') {
-      msgPrompt     += sprintf("%-46s %26s\r\n", accountAddr, tokenBalance.toString());
+      let eosBalance = accountInfo.balance;
+      let ramAvailable = accountInfo.ramAvailable;
+      let netAvailable = accountInfo.netAvailable;
+      let cpuAvailable = accountInfo.cpuAvailable;
+
+      if (symbolInfo[1].tokenSymbol === 'EOS') {
+        msgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
+        msgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", accountAddr, eosBalance, ramAvailable, netAvailable, cpuAvailable);
+      } else {
+        msgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %12s\r\n", "Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)", symbolInfo[1].tokenSymbol + " Balance");
+        msgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %12s\r\n", accountAddr, eosBalance, ramAvailable, netAvailable, cpuAvailable, tokenBalance.toString());
+      }
     } else {
+      msgPrompt     += sprintf("%-46s %26s\r\n", "Account", symbolStr);
       msgPrompt     += sprintf("%-46s %26s\r\n", accountAddr,
       ccUtil.weiToToken(tokenBalance.toString(), symbolInfo[1].tokenDecimals));
     }
@@ -2339,6 +2673,34 @@ async function main(){
         loadAccount(self, args, resolve, reject);
       } else {
         resolve(fromAddress);
+      }
+    });
+  }
+
+  async function loadCommand(v, cmdArray, resolve, reject) {
+    let self          = v;
+    let cmdCount = cmdArray.length;
+
+    let msgPrompt = '';
+    cmdArray.forEach(function (value, index) {
+      let indexString = index + ': ' + value;
+      msgPrompt += sprintf("%-46s \r\n", indexString);
+    });
+    let schema =
+      {
+        type: DMS.command.type,
+        name: DMS.command.name,
+        message: msgPrompt + DMS.command.message
+      };
+    self.prompt([schema], function (result) {
+      let cmdIndex = result[DMS.command.name];
+      checkExit(cmdIndex);
+
+      if (cmdIndex || cmdIndex < cmdCount) {
+        resolve(cmdArray[cmdIndex]);
+      } else {
+        vorpal.log(ERROR_MESSAGE.INPUT_AGAIN);
+        loadCommand(self, cmdArray, resolve, reject);
       }
     });
   }

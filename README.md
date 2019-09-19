@@ -44,6 +44,8 @@ Help
     8.  list               list transaction.
     9.  create             create account.
     10. approve            approve token to HTLC contract.
+    11. import             import account.
+    12. action             chain action.
 
 
 Examples

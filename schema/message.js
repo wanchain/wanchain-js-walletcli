@@ -99,10 +99,25 @@ exports.DMS = {
     name: 'password',
     message: _colorStart + 'Confirm the password: ' + _colorEnd
   },
+  'publicKey': {
+    type: 'input',
+    name: 'publicKey',
+    message: _colorStart + 'Input the public key: ' + _colorEnd
+  },
   'privateKey': {
-    type: 'privateKey',
+    type: 'input',
     name: 'privateKey',
     message: _colorStart + 'Input the private key (wif): ' + _colorEnd
+  },
+  'command': {
+    type: 'input',
+    name: 'command',
+    message: _colorStart + 'Input the index of command: ' + _colorEnd
+  },
+  'account': {
+    type: 'input',
+    name: 'account',
+    message: _colorStart + 'Input the account name: ' + _colorEnd
   },
 };
 
