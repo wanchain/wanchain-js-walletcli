@@ -133,6 +133,7 @@ async function main(){
         if (ERROR) {
           return;
         }
+        let gasPrice, gasLimit;
         if (chainName !== 'EOS') {
           //================== gasPrice ==================
           if (chainName === 'WAN') {
@@ -142,7 +143,7 @@ async function main(){
             args.promptInfo = DMS.ethGasPrice;
             args.minGasPrice = ethMinGasPrice;
           }
-          let gasPrice = await new Promise(function (resolve, reject) {
+          gasPrice = await new Promise(function (resolve, reject) {
             loadGasPrice(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -152,7 +153,7 @@ async function main(){
             return;
           }
           //================== gasLimit ==================
-          let gasLimit = await new Promise(function (resolve, reject) {
+          gasLimit = await new Promise(function (resolve, reject) {
             loadGasLimit(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -162,6 +163,7 @@ async function main(){
             return;
           }
         }
+
         //================== password ==================
         let needPwd = true;
         const input = {};
@@ -170,9 +172,17 @@ async function main(){
         input.txFeeRatio = storeman.txFeeRatio;
         input.to = to;
         input.amount = amount;
-        if (chainName !== 'EOS') {
+        if (chainName !== 'EOS' ) {
           input.gasPrice = gasPrice;
           input.gasLimit = gasLimit;
+        } 
+        if (args.dstChain[1].tokenType === 'EOS') {
+          input.toBIP44Path = args.BIP44Path;
+          input.toWalletID = args.walletID;
+        }
+        if (args.srcChain[1].tokenType === 'EOS') {
+          input.BIP44Path = args.BIP44Path;
+          input.walletID = args.walletID;
         }
 
         while (needPwd) {
@@ -229,8 +239,9 @@ async function main(){
           args.promptInfo = DMS.ethGasPrice;
           args.minGasPrice = ethMinGasPrice;
         }
+        let gasPrice, gasLimit;
         if (tx.dstChainType.toUpperCase() !== 'EOS') {
-          let gasPrice = await new Promise(function (resolve, reject) {
+          gasPrice = await new Promise(function (resolve, reject) {
             loadGasPrice(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -240,7 +251,7 @@ async function main(){
             return;
           }
           //================== gasLimit ==================
-          let gasLimit = await new Promise(function (resolve, reject) {
+          gasLimit = await new Promise(function (resolve, reject) {
             loadGasLimit(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -306,6 +317,8 @@ async function main(){
         if (ERROR) {
           return;
         }
+
+        let gasPrice, gasLimit;
         if (tx.srcChainType.toUpperCase() !== 'EOS') {
           //================== gasPrice ==================
           if (tx.srcChainType.toUpperCase() === 'WAN') {
@@ -315,7 +328,7 @@ async function main(){
             args.promptInfo = DMS.ethGasPrice;
             args.minGasPrice = ethMinGasPrice;
           }
-          let gasPrice = await new Promise(function (resolve, reject) {
+          gasPrice = await new Promise(function (resolve, reject) {
             loadGasPrice(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -325,7 +338,7 @@ async function main(){
             return;
           }
           //================== gasLimit ==================
-          let gasLimit = await new Promise(function (resolve, reject) {
+          gasLimit = await new Promise(function (resolve, reject) {
             loadGasLimit(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -492,6 +505,7 @@ async function main(){
         if (ERROR) {
           return;
         }
+        let gasPrice, gasLimit;
         if (chainName !== 'EOS') {
           //================== gasPrice ==================
           if (chainName === 'WAN') {
@@ -501,7 +515,7 @@ async function main(){
             args.promptInfo = DMS.ethGasPrice;
             args.minGasPrice = ethMinGasPrice;
           }
-          let gasPrice = await new Promise(function (resolve, reject) {
+          gasPrice = await new Promise(function (resolve, reject) {
             loadGasPrice(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -511,7 +525,7 @@ async function main(){
             return;
           }
           //================== gasLimit ==================
-          let gasLimit = await new Promise(function (resolve, reject) {
+          gasLimit = await new Promise(function (resolve, reject) {
             loadGasLimit(self, args, resolve, reject);
           }).catch(function (err) {
             ERROR = true;
@@ -723,6 +737,39 @@ async function main(){
               return;
             }
 
+            vorpal.log("RAM amount (KB)");
+            let ramBytes = await new Promise(function (resolve, reject) {
+              loadResourceAmount(self, args, resolve, reject);
+            }).catch(function (err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+
+            vorpal.log("Delegated Resource NET (EOS):");
+            let netAmount = await new Promise(function (resolve, reject) {
+              loadResourceAmount(self, args, resolve, reject);
+            }).catch(function (err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+  
+            vorpal.log("Delegated Resource CPU (EOS):");
+            let cpuAmount = await new Promise(function (resolve, reject) {
+              loadResourceAmount(self, args, resolve, reject);
+            }).catch(function (err) {
+              ERROR = true;
+              callback(err);
+            });
+            if (ERROR) {
+              return;
+            }
+
             //================== password ==================
             let needPwd         = true;
             const input         = {};
@@ -733,6 +780,9 @@ async function main(){
             input.accountName = accountName;
             input.ownerPublicKey = ownerPublicKey;
             input.activePublicKey = activePublicKey;
+            input.ramBytes = ramBytes;
+            input.netAmount = netAmount;
+            input.cpuAmount = cpuAmount;
 
             while (needPwd) {
               vorpal.log("Input the creator password.");
@@ -922,7 +972,7 @@ async function main(){
         }
 
         let cmd = await new Promise(function(resolve, reject) {
-          loadCommand(self, ['buyrambytes', 'delegatebw'], resolve, reject);
+          loadCommand(self, ['buyrambytes', 'sellram', 'delegatebw', 'undelegatebw'], resolve, reject);
         }).catch(function(err) {
           ERROR = true;
           callback(err);
@@ -957,7 +1007,7 @@ async function main(){
         input.walletID = args.walletID;
         input.action = cmd;
 
-        if (cmd === 'buyrambytes') {
+        if (cmd === 'buyrambytes' || cmd === 'sellram') {
           vorpal.log("RAM amount (KB)");
           let ramBytes = await new Promise(function (resolve, reject) {
             loadResourceAmount(self, args, resolve, reject);
@@ -972,7 +1022,7 @@ async function main(){
           input.ramBytes = ramBytes;
         }
 
-        if (cmd === 'delegatebw') {
+        if (cmd === 'delegatebw' || cmd === 'undelegatebw') {
           vorpal.log("Delegated Resource NET (EOS):");
           let netAmount = await new Promise(function (resolve, reject) {
             loadResourceAmount(self, args, resolve, reject);
@@ -1457,7 +1507,7 @@ async function main(){
         if(item[0] === 'BTC') continue;
         let subMap = item[1];
         for(let subItem of subMap){
-          if (args.chainTypeBalance !== subItem[1].tokenSymbol
+          if (args.chainTypeBalance !== subItem[1].tokenType
             && args.chainTypeBalance !== 'WAN') continue;
           // if(args.chainTypeBalance === 'ETH' && subItem[1].tokenSymbol === 'WAN') continue;
           index++;
@@ -1582,17 +1632,27 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
-        let tokenDecimals = args.srcChain[1].tokenDecimals;
+        let addressArr = [];
+        eosAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[1].tokenOrigAddr,
+          args.srcChain[1].tokenType,
+          args.srcChain[1].tokenSymbol);
+
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %18s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)", args.srcChain[1].tokenSymbol + " Balance");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
+          let tokenBalance = tokenBalanceList[value.address];
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
+          let tokenDecimals = args.srcChain[1].tokenDecimals;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable, tokenBalance);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID, tokenBalance];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -1722,17 +1782,27 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
-        let tokenDecimals = args.srcChain[1].tokenDecimals;
+        let addressArr = [];
+        eosAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[1].tokenOrigAddr,
+          args.srcChain[1].tokenType,
+          args.srcChain[1].tokenSymbol);
+
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %18s\r\n", "Sender Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)", args.srcChain[1].tokenSymbol + " Balance");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
+          let tokenBalance = tokenBalanceList[value.address];
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
+          let tokenDecimals = args.srcChain[1].tokenDecimals;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable, tokenBalance);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID, tokenBalance];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -1999,17 +2069,27 @@ async function main(){
     } else if (args.dstChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
-        let tokenDecimals = args.srcChain[1].tokenDecimals;
+        let addressArr = [];
+        eosAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.dstChain[1].tokenOrigAddr,
+          args.dstChain[1].tokenType,
+          args.dstChain[1].tokenSymbol);
+
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %18s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)", args.dstChain[1].tokenSymbol + " Balance");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
+          let tokenBalance = tokenBalanceList[value.address];
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
+          let tokenDecimals = args.dstChain[1].tokenDecimals;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable, tokenBalance);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID, tokenBalance];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -2043,8 +2123,10 @@ async function main(){
           validate = ccUtil.isWanAddress(toAddress);
         } else if (args.dstChain[1].tokenType === 'ETH') {
           validate = ccUtil.isEthAddress(toAddress);
-        } else if (args.srcChain[1].tokenType === 'EOS') {
+        } else if (args.dstChain[1].tokenType === 'EOS') {
           validate = ccUtil.isEosAccount(toAddress);
+          args.BIP44Path = args.to[3];
+          args.walletID = args.to[4];
         }
       } else {
         validate = false;
@@ -2135,17 +2217,27 @@ async function main(){
     } else if (args.srcChain[1].tokenStand === 'EOS') {
       try {
         let eosAddressList = await ccUtil.getEosAccountsInfo();
-        let tokenDecimals = args.srcChain[1].tokenDecimals;
+        let addressArr = [];
+        eosAddressList.forEach(function (value, index) {
+          addressArr.push(value.address);
+        });
+        let tokenBalanceList = await ccUtil.getMultiTokenBalanceByTokenScAddr(addressArr,
+          args.srcChain[1].tokenOrigAddr,
+          args.srcChain[1].tokenType,
+          args.srcChain[1].tokenSymbol);
+
         console.log("============================================================");
-        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)");
+        fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %18s\r\n", "Receiver Account(EOS)", "EOS Balance", "Valid Ram(KB)", "Valid Net(KB)", "Valid CPU(ms)", args.srcChain[1].tokenSymbol + " Balance");
         eosAddressList.forEach(function (value, index) {
           let eosBalance = value.balance;
           let ramAvailable = value.ramAvailable;
           let netAvailable = value.netAvailable;
           let cpuAvailable = value.cpuAvailable;
+          let tokenBalance = tokenBalanceList[value.address];
           let indexString = (index + 1) + ': ' + value.address;
-          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable);
-          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID];
+          let tokenDecimals = args.srcChain[1].tokenDecimals;
+          fromMsgPrompt += sprintf("%-16s %12s  %12s  %18s  %18s  %12s\r\n", indexString, eosBalance, ramAvailable, netAvailable, cpuAvailable, tokenBalance);
+          addressArray[value.address] = [value.address, eosBalance, tokenDecimals, value.BIP44Path, value.walletID, tokenBalance];
           addressArray[index + 1] = addressArray[value.address];
         });
       } catch (e) {
@@ -2182,6 +2274,8 @@ async function main(){
           validate = ccUtil.isEthAddress(toAddress);
         } else if (args.srcChain[1].tokenType === 'EOS') {
           validate = ccUtil.isEosAccount(toAddress);
+          args.BIP44Path = args.to[3];
+          args.walletID = args.to[4];
         }
       } else {
         validate = false;
@@ -2203,6 +2297,9 @@ async function main(){
       // validate
       let validate = false;
       let pattern = /^\d+(\.\d{1,18})?$/;
+      if (args.srcChain[0] === 'EOS') {
+        pattern = /^\d+(\.\d{1,4})?$/;
+      }
       if (pattern.test(amount)) {
         validate = true;
       }
@@ -2232,6 +2329,9 @@ async function main(){
       // validate
       let validate = false;
       let pattern = /^\d+(\.\d{1,18})?$/;
+      if (args.srcChain[0] === 'EOS') {
+        pattern = /^\d+(\.\d{1,4})?$/;
+      }
       if (pattern.test(amount)) {
         validate = true;
       }
