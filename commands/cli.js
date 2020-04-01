@@ -931,7 +931,7 @@ async function main(){
         }
 
         try {
-          ccUtil.importEosAccount(args.privateKey, args.account, password);
+          ccUtil.importEosAccountByRawKey(args.privateKey, args.account, password);
           vorpal.log("Import Account:", args.account);
           callback();
         } catch (e) {

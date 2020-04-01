@@ -21,7 +21,8 @@ config.consoleColor = {
   'COLOR_FgGreen'   : "\x1b[32m"
 };
 config.iWAN = {
-  "url" :  global.wanchain_js_testnet ? 'apitest.wanchain.org' : "api.wanchain.org",
+  "url" :  global.wanchain_js_testnet ? ['apitest.wanchain.org'] : ["api.wanchain.org"],
+  "port": [8443],
   "wallet": {
       "apikey": "fa5078fd834201d1d5bd57908a3069fe8ba560f329c060dffe04ccb52a9f1fcb",
       "secret": "67ab8ebd6ade75b5a9ae3761f03aa3750ce73a1d859dd070bddd72436c7d5957"
